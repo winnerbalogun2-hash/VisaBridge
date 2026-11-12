@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#8B5E3C"><link rel="icon" href="">
+<title>VisaBridge — The World, Within Reach</title>
+<style>
+:root{--bg-canvas:#FFFFFF;--bg-card:#FFFFFF;--bg-input:#FFFFFF;--accent:#8B5E3C;--accent-dark:#6F4A2F;--cream:#F3EAE2;--text-main:#151515;--text-sub:#666666;--border:#E5E5E5}
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg-canvas);color:var(--text-main);min-height:100vh}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit}button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* AUTH: normal document flow. No fixed height, no overflow:hidden, so the page scrolls to the last button.
+   margin:auto centres short content without clipping tall content (unlike justify-content:center). */
+#auth{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;padding:28px 18px calc(60px + env(safe-area-inset-bottom))}
+.auth-card{width:100%;max-width:440px;margin:auto}
+.auth-brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;margin-bottom:26px}
+.auth-card h1{font-size:28px;line-height:1.2;margin-bottom:10px}.auth-card>p,.auth-card form>p.lead{font-size:14px;line-height:1.55;color:var(--text-sub);margin-bottom:20px}
+.auth-btn{width:100%;border:0;border-radius:12px;background:var(--accent);color:#fff;font-weight:800;font-size:15px;padding:14px;margin-top:14px}
+.auth-btn.alt{background:#fff;color:var(--accent);border:1.5px solid var(--accent)}.auth-btn:disabled{opacity:.6}
+.link-btn{background:none;border:0;color:var(--accent);font-weight:700;font-size:13px;padding:10px 0;margin-top:6px}
+.err{color:#B3261E;font-size:12px;margin-top:4px;min-height:0}.err:empty{display:none}.form-err{background:#FDECEA;border-radius:10px;padding:10px;margin-top:12px}
+.demo-note{font-size:11px;line-height:1.5;color:var(--text-sub);background:var(--cream);border-radius:10px;padding:10px 12px;margin-top:18px}
+/* APP */
+#appRoot{padding-bottom:82px;min-height:100vh}
+.desktop-sidebar{display:none;width:250px;background:#FAF7F4;border-right:1px solid var(--border);padding:20px 14px;flex-direction:column;gap:6px;position:fixed;top:0;bottom:0;overflow-y:auto;z-index:10}
+.side-brand{display:flex;align-items:center;gap:10px;padding:0 8px 16px;border-bottom:1px solid var(--border);margin-bottom:10px;font-weight:800;font-size:17px}
+.brand-mark{width:34px;height:34px;border-radius:11px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800}
+.side-link{display:flex;align-items:center;gap:10px;padding:11px 12px;border:0;background:transparent;border-radius:10px;color:var(--text-sub);font-size:13px;text-align:left}
+.side-link.active,.side-link:hover{background:var(--cream);color:var(--accent);font-weight:600}
+.app-container{max-width:560px;margin:0 auto;padding:14px 16px 30px}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:17px}
+.user-greet{display:flex;align-items:center;gap:10px;min-width:0}.avatar-ring{width:44px;height:44px;border-radius:50%;background:var(--cream);border:2px solid var(--accent);color:var(--accent);display:grid;place-items:center;font-weight:800;font-size:20px;flex-shrink:0;overflow:hidden;border-style:solid;cursor:pointer}
+.greet-copy{min-width:0}.greet-copy small{display:block;color:var(--text-sub);font-size:11px;margin-bottom:2px}.greet-copy strong{font-size:15px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.header-actions{display:flex;align-items:center;gap:10px}.icon-btn{width:38px;height:38px;border:1px solid var(--border);border-radius:50%;background:#fff;color:var(--accent);font-size:16px}
+.hero-emerald{background:var(--cream);border:1px solid #E6D6C8;border-radius:18px;padding:20px;color:var(--text-main);position:relative;overflow:hidden}
+.hero-top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px}.status-tag{font-size:11px;font-weight:800;color:var(--accent)}.pill-cta{background:var(--accent);color:#fff;border:0;padding:8px 13px;border-radius:20px;font-size:11px;font-weight:800}
+.hero-emerald h1{font-size:23px;line-height:1.2;margin-bottom:7px;color:var(--text-main)}.hero-emerald p{font-size:12.5px;line-height:1.5;max-width:420px;color:#444}
+.connected-strip{background:#fff;border:1px solid var(--border);border-radius:13px;padding:12px 15px;display:flex;justify-content:space-between;align-items:center;font-size:11px;margin:10px 0 14px;gap:8px}
+.strip-left{color:var(--text-sub)}.strip-right{color:var(--text-main);font-weight:700;flex-shrink:0}
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:15px;margin-bottom:12px}
+.plan-card{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;background:#fff}.plan-card .lbl{font-size:11px;color:var(--text-sub);letter-spacing:.8px;margin-bottom:7px}.plan-card strong{font-size:20px}.plan-card p{font-size:12px;color:var(--text-sub);margin-top:5px;line-height:1.4}
+.plane{width:46px;height:46px;border-radius:15px;background:var(--cream);color:var(--accent);display:grid;place-items:center;font-size:22px;flex-shrink:0}
+.primary-banner{background:#fff;border:1px solid var(--border);border-radius:16px;padding:15px;margin:14px 0 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.banner-left{display:flex;align-items:center;gap:11px}.banner-icon{width:42px;height:42px;border-radius:12px;background:var(--cream);color:var(--accent);display:grid;place-items:center;font-size:20px;flex-shrink:0}
+.banner-text h3{font-size:13px;margin-bottom:4px}.banner-text p{font-size:11px;color:var(--text-sub);line-height:1.4}.go-btn{background:var(--accent);color:#fff;border:0;padding:8px 16px;border-radius:20px;font-weight:800;font-size:12px;flex-shrink:0}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin:22px 0 13px}.section-head strong{font-size:14px;color:var(--text-main)}.section-head button{border:0;background:none;color:var(--accent);font-size:11px;font-weight:700}
+.dept-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));row-gap:19px;column-gap:8px;text-align:center;background:#fff;border:1px solid var(--border);border-radius:17px;padding:18px 9px}
+.dept-item{border:0;background:transparent;color:inherit;display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0}
+.dept-circle{width:52px;height:52px;border-radius:16px;background:var(--cream);color:var(--accent);display:grid;place-items:center;font-size:21px;border:1px solid #E6D6C8;transition:transform .12s}
+.dept-circle.tq{color:var(--accent-dark)}.dept-item:active .dept-circle{transform:scale(.94)}.dept-label{font-size:10.5px;color:var(--text-main);line-height:1.25;font-weight:600}
+.promo-strip{background:var(--cream);border:1px solid #E6D6C8;border-radius:14px;padding:15px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.promo-strip strong{font-size:13px}.promo-strip p{font-size:11px;color:var(--text-sub);margin-top:4px;line-height:1.4}
+.jrow{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}.jrow span{color:var(--text-sub)}.jrow strong{text-align:right}
+.dest-wrap{display:flex;flex-wrap:wrap;gap:8px}.dest-chip{border:1px solid var(--border);background:#fff;color:var(--text-main);border-radius:20px;padding:8px 12px;font-size:12px;font-weight:600}.dest-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.av-grid{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0}.av-opt{width:46px;height:46px;border-radius:50%;border:2px solid var(--border);background:var(--cream);font-size:22px}.av-opt.on{border-color:var(--accent)}
+.page{display:none}.page.active{display:block}.workspace-head{display:flex;align-items:center;gap:11px;margin:4px 0 17px}
+.back-btn{width:35px;height:35px;border-radius:50%;background:#fff;border:1px solid var(--border);color:var(--text-main);display:grid;place-items:center}
+.workspace-head small{display:block;color:var(--accent);font-size:9px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:3px}
+.workspace-head h1{font-size:19px}.workspace-intro{font-size:12px;line-height:1.55;color:var(--text-sub);margin:-7px 0 16px}
+.field-label{display:block;font-size:12px;color:#333;font-weight:650;margin:12px 0 6px}
+.input-box{width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text-main);font-size:16px;margin-bottom:3px}
+.input-box:focus{outline:none;border-color:var(--accent)}
+textarea.input-box{min-height:90px;resize:vertical}
+.action-btn{border:0;border-radius:10px;background:var(--accent);color:#fff;font-size:12px;font-weight:800;padding:11px 15px;margin-top:10px}
+.secondary-btn{border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--accent);font-size:12px;font-weight:700;padding:10px 13px;margin-top:10px}
+.chip{display:inline-block;padding:5px 10px;border-radius:20px;font-size:10px;font-weight:700;background:var(--cream);color:var(--accent)}
+.feature-list{list-style:none;margin-top:8px}.feature-list li{padding:10px 0;border-bottom:1px solid var(--border);font-size:12px;color:#333;display:flex;gap:9px}.feature-list li:before{content:"✓";color:var(--accent);font-weight:900}
+.note{font-size:11px;line-height:1.55;color:var(--text-sub);margin-top:10px}
+.result{display:none;background:var(--cream);border:1px solid #E6D6C8;padding:13px;border-radius:11px;margin-top:12px;font-size:12px;line-height:1.55;color:var(--text-main)}.result.show{display:block}
+.check-row{display:flex;align-items:flex-start;gap:9px;padding:10px 0;border-bottom:1px solid var(--border);font-size:12px;color:#333}.check-row:last-child{border:0}
+.chat-box{min-height:190px;max-height:280px;overflow:auto;display:flex;flex-direction:column;gap:9px;padding:11px;background:#FAF7F4;border-radius:12px;margin-bottom:10px}
+.msg{max-width:85%;padding:10px 12px;border-radius:13px;font-size:12px;line-height:1.45}.msg.bot{background:var(--cream);color:var(--text-main);align-self:flex-start}.msg.user{background:var(--accent);color:#fff;font-weight:650;align-self:flex-end}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 0 calc(8px + env(safe-area-inset-bottom));z-index:20}
+.bottom-nav button{background:none;border:0;color:var(--text-sub);font-size:10px;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:55px}.bottom-nav button span{font-size:18px}.bottom-nav button.active{color:var(--accent);font-weight:700}
+.toast{position:fixed;left:50%;bottom:78px;transform:translate(-50%,10px);opacity:0;pointer-events:none;background:var(--cream);color:var(--text-main);border:1px solid var(--accent);padding:10px 15px;border-radius:10px;font-size:12px;font-weight:700;z-index:50;transition:.2s;max-width:90%;text-align:center}.toast.show{opacity:1;transform:translate(-50%,0)}
+.empty-state{border:1px dashed #CFCFCF;border-radius:12px;padding:18px;text-align:center;color:var(--text-sub);font-size:12px}
+@media(min-width:860px){#appRoot{padding-bottom:0}.desktop-sidebar{display:flex}.app-container{max-width:900px;margin-left:250px;padding:25px 30px 45px}.bottom-nav{display:none}}
+@media(max-width:380px){.app-container{padding-left:12px;padding-right:12px}.dept-grid{column-gap:3px}.dept-label{font-size:9.5px}.hero-emerald h1{font-size:21px}}
+
+.logo{display:inline-grid;place-items:center;line-height:0}.auth-brand .logo svg{width:46px;height:46px}
+.card{border-radius:20px;box-shadow:0 6px 24px rgba(139,94,60,.07)}
+.hero-emerald{background:linear-gradient(135deg,#8B5E3C,#6F4A2F);border:0;border-radius:24px}.hero-emerald h1,.hero-emerald p{color:#fff}.hero-emerald .status-tag{color:#F3EAE2}.hero-emerald .pill-cta{background:#F3EAE2;color:#151515}
+.dept-circle{background:linear-gradient(135deg,#F3EAE2,#fff);border-radius:20px}
+.icon-btn{position:relative}.badge{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;border-radius:9px;background:#E5484D;color:#fff;font-size:10px;font-weight:800;display:grid;place-items:center;padding:0 4px}
+#page-department.active{position:fixed;inset:0;z-index:40;background:var(--bg-canvas);overflow-y:auto;padding:14px 16px calc(30px + env(safe-area-inset-bottom))}
+#page-department .workspace-head,#page-department .workspace-intro,#departmentContent{max-width:620px;margin-left:auto;margin-right:auto}
+.wcard{background:linear-gradient(135deg,#8B5E3C,#6F4A2F);color:#fff;border-radius:24px;padding:20px}.wcard small{opacity:.8}.wcard strong{display:block;font-size:32px;margin:6px 0 14px}.wrow{display:flex;gap:8px}.wrow select{flex:1;margin:0;font-size:13px}
+.wactions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}.wactions button{border:1px solid var(--border);background:#fff;border-radius:18px;padding:14px 6px;font-weight:700;font-size:12px;color:var(--accent);display:flex;flex-direction:column;align-items:center;gap:6px}.wactions span{font-size:20px}
+.sh{font-size:14px;margin-bottom:4px}
+.trbar{display:flex;gap:8px;align-items:center}.trbar select{margin:0;font-size:14px}.swap{width:42px;height:42px;border-radius:50%;border:1px solid var(--border);background:#fff;color:var(--accent);font-size:18px;flex-shrink:0}
+.trcard{background:#fff;border:1px solid var(--border);border-radius:24px;padding:16px;margin-top:14px;box-shadow:0 6px 24px rgba(139,94,60,.07)}.trcard.out{background:var(--cream)}
+.trin{width:100%;border:0;outline:0;resize:none;min-height:120px;font-size:20px;line-height:1.4;background:transparent;color:var(--text-main)}.trout{font-size:20px;line-height:1.4;min-height:80px;margin-bottom:8px}
+.trtools{display:flex;justify-content:space-between;align-items:center;gap:8px}.mic{width:60px;height:60px;border-radius:50%;border:0;background:var(--accent);color:#fff;font-size:26px;box-shadow:0 6px 18px rgba(139,94,60,.35)}.mic.on{background:#E5484D;animation:pulse 1s infinite}
+@keyframes pulse{50%{transform:scale(1.08)}}@media(prefers-reduced-motion:reduce){.mic.on{animation:none}}
+.mapbox{border-radius:22px;overflow:hidden;border:1px solid var(--border);height:260px;margin-bottom:12px}.mapbox iframe{width:100%;height:100%;border:0}
+.searchrow{display:flex;gap:8px;margin-bottom:8px}.searchrow .input-box,.searchrow .action-btn{margin:0}
+.snapgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.snap{border:0;border-radius:20px;padding:16px 12px;color:#fff;text-align:left;display:flex;flex-direction:column;gap:4px;background:linear-gradient(135deg,#8B5E3C,#A97650)}.snap+.snap{background:linear-gradient(135deg,#6F4A2F,#F3EAE2)}.snap span{font-size:26px}.snap small{opacity:.9;font-size:11px}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}.tile{border:1px solid var(--border);background:#fff;border-radius:20px;padding:14px;text-align:left;display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:13px;color:var(--text-main)}.tile span{font-size:24px}.tile small{color:var(--text-sub);font-weight:500;font-size:11px}.tile.on{border-color:var(--accent);background:var(--cream)}
+.shop .tile{position:relative;padding-top:24px;overflow:hidden}.shop .tile:before{content:"";position:absolute;left:0;right:0;top:0;height:10px;background:repeating-linear-gradient(90deg,#8B5E3C 0 14px,#F3EAE2 14px 28px)}
+.bar{height:6px;border-radius:3px;background:#E6D6C8;overflow:hidden;width:100%}.bar i{display:block;height:100%;background:var(--accent)}
+.phead{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;margin-bottom:6px}.avwrap{position:relative;display:inline-block}.avwrap .cam{position:absolute;right:-2px;bottom:-2px;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:13px;border:2px solid #fff}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#E5484D;margin-right:6px}
+
+.pwwrap{position:relative}.pwwrap .input-box{padding-right:46px}.eye{position:absolute;right:5px;top:5px;width:38px;height:38px;border:0;background:none;font-size:16px}
+.meter{height:5px;background:#E5E5E5;border-radius:3px;overflow:hidden;margin-top:4px}.meter i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+.wactions{grid-template-columns:repeat(4,1fr)}
+.dept-circle,.gl{position:relative;overflow:hidden;color:var(--accent);background:linear-gradient(145deg,rgba(255,255,255,.95),rgba(243,234,226,.55));border:1px solid rgba(255,255,255,.9);box-shadow:0 8px 20px rgba(139,94,60,.18),inset 0 1px 0 #fff,inset 0 -8px 14px rgba(139,94,60,.10);backdrop-filter:blur(8px)}
+.dept-circle:before,.gl:before{content:"";position:absolute;width:70%;height:70%;left:-15%;top:-28%;border-radius:50%;background:radial-gradient(circle,rgba(139,94,60,.28),transparent 70%)}
+.dept-circle svg,.gl svg{position:relative;width:26px;height:26px}.gl{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:13px;vertical-align:middle;margin-right:6px}.side-link svg{width:16px;height:16px;vertical-align:-3px}
+</style>
+</head>
+<body>
+<!-- ============ AUTHENTICATION ============ -->
+<div id="auth">
+ <div class="auth-card">
+  <div class="auth-brand"><span class="logo"><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><rect width="48" height="48" rx="14" fill="#8B5E3C"/><path d="M8 33h32" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M10 33C10 22 17 15 24 15s14 7 14 18" fill="none" stroke="#F3EAE2" stroke-width="3.5" stroke-linecap="round"/><path d="M17 33v-8M24 33V15M31 33v-8" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg></span><span>VISA<span style="color:var(--accent)">BRIDGE</span></span></div>
+  <section id="auth-welcome">
+   <h1>The world, within reach.</h1>
+   <p>Explore destinations, understand visa requirements and find the support you need to travel, settle and live confidently.</p>
+   <button class="auth-btn" data-auth="signup">Create Account</button>
+   <button class="auth-btn alt" data-auth="signin">Sign In</button>
+  </section>
+  <section id="auth-signup" hidden>
+   <form id="signupForm" novalidate>
+    <h1>Create account</h1><p class="lead">Set up your VisaBridge profile.</p>
+    <label class="field-label" for="suName">Full name</label><input class="input-box" id="suName" autocomplete="name" placeholder="Your full name"><div class="err" id="suNameE" role="alert"></div>
+    <label class="field-label" for="suEmail">Email address</label><input class="input-box" id="suEmail" type="email" autocomplete="email" placeholder="you@example.com"><div class="err" id="suEmailE" role="alert"></div>
+    <label class="field-label" for="suPhone">Phone number (optional)</label><input class="input-box" id="suPhone" type="tel" autocomplete="tel" placeholder="+234 800 000 0000"><div class="err" id="suPhoneE" role="alert"></div>
+    <label class="field-label" for="suCountry">Country of residence</label><input class="input-box" id="suCountry" list="countries" autocomplete="country-name" placeholder="Start typing your country"><div class="err" id="suCountryE" role="alert"></div>
+    <label class="field-label" for="suPass">Password (8+ characters)</label><input class="input-box" id="suPass" type="password" autocomplete="new-password"><div class="err" id="suPassE" role="alert"></div>
+    <label class="field-label" for="suPass2">Confirm password</label><input class="input-box" id="suPass2" type="password" autocomplete="new-password"><div class="err" id="suPass2E" role="alert"></div>
+    <div class="err form-err" id="suFormE" role="alert"></div>
+    <button class="auth-btn" id="suBtn" type="submit">Create Account</button>
+    <button class="link-btn" type="button" data-auth="signin">Already have an account? Sign in</button>
+    <button class="link-btn" type="button" data-auth="welcome">‹ Back</button>
+   </form>
+  </section>
+  <section id="auth-signin" hidden>
+   <form id="signinForm" novalidate>
+    <h1>Sign in</h1><p class="lead">Welcome back. Use the email and password you registered with.</p>
+    <label class="field-label" for="siEmail">Email address</label><input class="input-box" id="siEmail" type="email" autocomplete="email"><div class="err" id="siEmailE" role="alert"></div>
+    <label class="field-label" for="siPass">Password</label><input class="input-box" id="siPass" type="password" autocomplete="current-password"><div class="err" id="siPassE" role="alert"></div>
+    <button class="link-btn" type="button" data-auth="forgot" style="margin:0">Forgot password?</button>
+    <div class="err form-err" id="siFormE" role="alert"></div>
+    <button class="auth-btn alt" type="button" id="bioLogin" hidden>Sign in with Face ID or fingerprint</button>
+    <button class="auth-btn" id="siBtn" type="submit">Sign In</button>
+    <button class="link-btn" type="button" data-auth="signup">New here? Create an account</button>
+    <button class="link-btn" type="button" data-auth="welcome">‹ Back</button>
+   </form>
+  </section>
+  <section id="auth-forgot" hidden><form id="forgotForm" novalidate><h1>Reset password</h1><p class="lead">Enter your registered email and we will send you a reset link.</p><label class="field-label" for="fpEmail">Email address</label><input class="input-box" id="fpEmail" type="email" autocomplete="email"><div class="err form-err" id="fpFormE" role="alert"></div><button class="auth-btn" id="fpBtn" type="submit">Send reset link</button><button class="link-btn" type="button" data-auth="signin">‹ Back to sign in</button></form></section>
+  <section id="auth-reset" hidden><form id="resetForm" novalidate><h1>New password</h1><p class="lead">Create a new password for your account.</p><label class="field-label" for="rpPass">New password</label><input class="input-box" id="rpPass" type="password" autocomplete="new-password"><label class="field-label" for="rpPass2">Confirm new password</label><input class="input-box" id="rpPass2" type="password" autocomplete="new-password"><div class="err form-err" id="rpFormE" role="alert"></div><button class="auth-btn" id="rpBtn" type="submit">Save new password</button></form></section>
+  <p class="demo-note" id="authNote"></p>
+ </div>
+</div>
+<datalist id="countries"><option>Nigeria</option><option>Ghana</option><option>Kenya</option><option>South Africa</option><option>Egypt</option><option>Morocco</option><option>United Kingdom</option><option>United States</option><option>Canada</option><option>France</option><option>Germany</option><option>Spain</option><option>Italy</option><option>Netherlands</option><option>United Arab Emirates</option><option>Saudi Arabia</option><option>India</option><option>Pakistan</option><option>China</option><option>Japan</option><option>Australia</option><option>Brazil</option><option>Mexico</option><option>Turkey</option><option>Ireland</option></datalist>
+
+<!-- ============ APP ============ -->
+<div id="appRoot" hidden>
+<aside class="desktop-sidebar">
+  <div class="side-brand"><span class="logo"><svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true"><rect width="48" height="48" rx="14" fill="#8B5E3C"/><path d="M8 33h32" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M10 33C10 22 17 15 24 15s14 7 14 18" fill="none" stroke="#F3EAE2" stroke-width="3.5" stroke-linecap="round"/><path d="M17 33v-8M24 33V15M31 33v-8" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg></span><span>VISA<span style="color:var(--accent)">BRIDGE</span></span></div>
+  <button class="side-link active" data-page="home">⌂ &nbsp; Home</button>
+  <button class="side-link" data-page="journey">▤ &nbsp; My Journey</button>
+  <button class="side-link" data-page="wallet">◈ &nbsp; Wallet</button>
+  <button class="side-link" data-page="profile">◉ &nbsp; Profile</button>
+  <button class="side-link" data-page="settings">⚙ &nbsp; Settings</button>
+  <div style="font-size:9px;color:#666;letter-spacing:1.4px;padding:18px 12px 7px">YOUR DEPARTMENTS</div>
+  <div id="sideDepartments"></div>
+  <button class="side-link" data-logout style="margin-top:12px">⎋ &nbsp; Sign out</button>
+</aside>
+
+<main class="app-container">
+<header class="header">
+  <div class="user-greet"><div class="avatar-ring" id="avatar" data-page="profile">G</div><div class="greet-copy"><small id="greeting">Welcome back</small><strong id="displayName">Guest traveller</strong></div></div>
+  <div class="header-actions"><button class="icon-btn" id="notifications" aria-label="Notifications">🔔<span class="badge" id="nBadge" hidden>0</span></button><button class="icon-btn" id="profileOpen" aria-label="Settings">⚙</button></div>
+</header>
+
+<section class="page active" id="page-home">
+  <div class="card plan-card">
+    <div><div class="lbl">YOUR TRAVEL PLAN</div><strong>Ready when you are</strong><p>Your destinations, documents and plans in one place.</p><button class="action-btn" data-page="journey">Set up my journey&nbsp; →</button></div>
+    <div class="plane">✈</div>
+  </div>
+
+  <div class="section-head"><strong>Your seven services</strong><span class="chip">7 departments</span></div>
+  <div class="dept-grid" id="departmentGrid"></div>
+
+  <div class="section-head"><strong>My Journey</strong><button data-page="journey">Edit →</button></div>
+  <div class="card" id="journeySummary"></div>
+
+  <div class="section-head"><strong>Explore destinations</strong><button data-dept="visa">Visa guidance →</button></div>
+  <div class="card"><div class="dest-wrap" id="destChips"></div><div id="destPanel" class="result"></div></div>
+
+  <div class="hero-emerald" style="margin-top:22px">
+    <div class="hero-top-row"><span class="status-tag">✦ YOUR JOURNEY, CONNECTED</span><button class="pill-cta" data-page="journey">My journey ↗</button></div>
+    <h1>The world, within reach.</h1>
+    <p>Explore destinations, understand visa requirements and find the support you need to travel, settle and live confidently.</p>
+  </div>
+  <div class="connected-strip"><span class="strip-left">● &nbsp; Your travel and living companion</span><span class="strip-right">7 services</span></div>
+  <div class="primary-banner">
+    <div class="banner-left"><div class="banner-icon">🛂</div><div class="banner-text"><h3>Start with Visa & Immigration</h3><p>Explore requirements and prepare your next steps.</p></div></div>
+    <button class="go-btn" data-dept="visa">Open</button>
+  </div>
+</section>
+
+<section class="page" id="page-journey">
+  <div class="workspace-head"><button class="back-btn" data-page="home">‹</button><div><small>YOUR PLANS</small><h1>My Journey</h1></div></div>
+  <p class="workspace-intro" id="journeyIntro"></p>
+  <div class="card">
+    <label class="field-label" for="origin">Travelling from</label><input class="input-box" id="origin" placeholder="e.g. Nigeria">
+    <label class="field-label" for="destination">Destination</label><input class="input-box" id="destination" placeholder="e.g. France">
+    <label class="field-label" for="purpose">Purpose of travel</label><select class="input-box" id="purpose"><option value="">Choose a purpose</option><option>Tourism</option><option>Study</option><option>Work</option><option>Business</option><option>Family visit</option><option>Relocation</option><option>Other</option></select>
+    <label class="field-label" for="travelDate">Expected travel date</label><input class="input-box" id="travelDate" type="date">
+    <button class="action-btn" id="saveJourney">Save journey</button>
+    <div class="result" id="journeyResult"></div>
+  </div>
+</section>
+
+<section class="page" id="page-profile"><div class="workspace-head"><button class="back-btn" data-page="home" aria-label="Back">‹</button><div><small>ACCOUNT</small><h1>Profile</h1></div></div>
+  <div class="card">
+    <div class="phead"><div class="avwrap"><div class="avatar-ring" id="profileAvatar" style="width:84px;height:84px;font-size:34px" title="Change avatar">G</div><span class="cam">✎</span></div><strong id="profileHeadName"></strong><div style="font-size:12px;color:var(--text-sub)" id="profileEmail"></div><small class="note" style="margin:0">Tap your picture to change it.</small></div>
+    <div id="avatarPanel" hidden><label class="field-label">Choose an avatar</label><div class="av-grid" id="avatarGrid"></div><input type="file" id="photoInput" accept="image/*" hidden><button class="secondary-btn" id="photoBtn" type="button">Upload photo</button> <button class="secondary-btn" id="avatarReset" type="button">Use my initial</button></div>
+    <label class="field-label" for="profileName">Full name</label><input class="input-box" id="profileName" autocomplete="name">
+    <div class="two"><div><label class="field-label" for="profileGender">Gender</label><select class="input-box" id="profileGender"><option value="">Select</option><option>Female</option><option>Male</option><option>Non-binary</option><option>Prefer not to say</option></select></div><div><label class="field-label" for="profileDob">Date of birth</label><input class="input-box" id="profileDob" type="date"></div></div>
+    <label class="field-label" for="profilePhone">Phone number</label><input class="input-box" id="profilePhone" type="tel" autocomplete="tel" placeholder="+234 800 000 0000">
+    <label class="field-label" for="profileAddress">Address</label><textarea class="input-box" id="profileAddress" style="min-height:64px" autocomplete="street-address"></textarea>
+    <label class="field-label" for="profileCountry">Country of residence</label><input class="input-box" id="profileCountry" list="countries">
+    <label class="field-label" for="profileNationality">Nationality</label><input class="input-box" id="profileNationality" list="countries">
+    <div class="section-head" style="margin:18px 0 4px"><strong>Passport and visa</strong></div>
+    <div class="two"><div><label class="field-label" for="profilePassport">Passport number</label><input class="input-box" id="profilePassport" autocomplete="off"></div><div><label class="field-label" for="profilePassportExp">Passport expiry</label><input class="input-box" id="profilePassportExp" type="date"></div></div><label class="field-label" for="profileVisaNo">Visa number</label><input class="input-box" id="profileVisaNo" autocomplete="off">
+    <div class="two"><div><label class="field-label" for="profileVisaType">Visa type</label><input class="input-box" id="profileVisaType" placeholder="e.g. Student"></div><div><label class="field-label" for="profileVisaExp">Visa expiry</label><input class="input-box" id="profileVisaExp" type="date"></div></div>
+    <label class="check-row" style="margin-top:10px"><input type="checkbox" id="keepInfo" checked> Save these details so I don't have to enter them again</label>
+    <button class="action-btn" id="saveProfile">Save profile</button><p class="note" id="storeNote"></p>
+  </div>
+  <div class="card"><h3 class="sh">Invite friends</h3><p class="note" style="margin:0 0 8px">Share VisaBridge with people who are planning to travel.</p><button class="action-btn" id="inviteBtn" style="margin:0">Invite friends</button> <button class="secondary-btn" data-page="security" style="margin:0">🔒 Security center</button></div><div class="section-head"><strong>Saved notes</strong></div><div class="card" id="savedContent"></div>
+  <button class="secondary-btn" data-logout style="width:100%">Sign out</button>
+</section>
+<section class="page" id="page-wallet"><div class="workspace-head"><button class="back-btn" data-page="home" aria-label="Back">‹</button><div><small>MONEY</small><h1>Wallet</h1></div></div><div id="walletBox"></div></section>
+<section class="page" id="page-settings"><div class="workspace-head"><button class="back-btn" data-page="home" aria-label="Back">‹</button><div><small>APP</small><h1>Settings</h1></div></div><div id="settingsBox"></div></section>
+<section class="page" id="page-security"><div class="workspace-head"><button class="back-btn" data-page="home" aria-label="Back">‹</button><div><small>ACCOUNT</small><h1>Security center</h1></div></div><div id="secBox"></div></section>
+<section class="page" id="page-notifs"><div class="workspace-head"><button class="back-btn" data-page="home" aria-label="Back">‹</button><div><small>UPDATES</small><h1>Notifications</h1></div></div><div id="notifBox"></div></section>
+
+<section class="page" id="page-department">
+  <div class="workspace-head"><button class="back-btn" data-page="home">‹</button><div><small>VISABRIDGE DEPARTMENT</small><h1 id="departmentTitle">Workspace</h1></div></div>
+  <p class="workspace-intro" id="departmentIntro"></p>
+  <div id="departmentContent"></div>
+</section>
+</main>
+
+<nav class="bottom-nav" aria-label="Main navigation">
+  <button class="active" data-page="home"><span>⌂</span>Home</button>
+  <button data-page="journey"><span>▤</span>Journey</button>
+  <button data-page="wallet"><span>◈</span>Wallet</button>
+  <button data-page="profile"><span>◉</span>Profile</button>
+</nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+const departments=[
+{id:"visa",icon:"🛂",name:"Visa & Immigration",intro:"Understand the preparation involved in travelling to or moving to another country.",features:["Nationality and destination context","Visa pathway research","Document preparation checklist","Application planning and saved notes"],description:"A preparation workspace. It does not make official eligibility decisions."},
+{id:"translator",icon:"🌐",name:"AI Translator",intro:"A place to prepare translations and useful phrases for everyday situations.",features:["Text translation workspace","Common travel phrases","Saved phrase notes","Document translation planning"],description:"Live translation requires a translation provider connection."},
+{id:"navigation",icon:"⌖",name:"Smart Navigation",intro:"Organise the places and services you may need when you arrive.",features:["Nearby essential services checklist","Places to research and save","Transport planning notes","Destination orientation"],description:"Live maps, routing and nearby results require a maps/location provider."},
+{id:"shopping",icon:"▧",name:"Shopping Assistant",intro:"Compare shopping options and keep track of local prices.",features:["Product comparison notes","Price and currency notes","Shopping checklist","Retailer research"],description:"Live prices and product availability require retailer or commerce integrations."},
+{id:"living",icon:"⌂",name:"Everyday Living",intro:"Prepare for the practical details of settling into a new country.",features:["Accommodation checklist","Banking and connectivity preparation","Healthcare and transport notes","Utilities and daily essentials"],description:"Country-specific advice should be verified with official providers."},
+{id:"local",icon:"◈",name:"Local Intelligence",intro:"Build an understanding of local rules, customs and public services.",features:["Local rules research checklist","Cultural and customs notes","Public-service contacts","Emergency information planning"],description:"Local information must be checked against current official sources."},
+{id:"assistant",icon:"✦",name:"Personal AI Assistant",intro:"Keep your questions and notes connected across your VisaBridge journey.",features:["Journey notes","Questions to research","Cross-department task list","Saved planning notes"],description:"AI-generated answers require a connected AI provider. Live AI answers are not connected yet."}
+];
+const $=id=>document.getElementById(id);
+let currentDept=null;
+function toast(message){const el=$("toast");el.textContent=message;el.classList.add("show");clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>el.classList.remove("show"),2300)}
+function showPage(name){document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));const page=$("page-"+name);if(page)page.classList.add("active");document.querySelectorAll("[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===name));window.scrollTo({top:0,behavior:"smooth"})}
+function openDepartment(id){const d=departments.find(x=>x.id===id);if(!d)return;currentDept=d; $("departmentTitle").textContent=d.name;$("departmentIntro").textContent=d.intro;renderDepartment(d);showPage("department")}
+function renderDepartmentOld(d){
+ const c=$("departmentContent");
+ const features=`<div class="card"><span class="chip">IN THIS WORKSPACE</span><ul class="feature-list">${d.features.map(x=>`<li>${x}</li>`).join("")}</ul><p class="note">${d.description}</p></div>`;
+ let workspace="";
+ if(d.id==="visa")workspace=`<div class="card"><h3 style="font-size:14px;margin-bottom:5px">Travel preparation</h3><p class="note">Enter your details to create a preparation summary. This is not a visa eligibility decision.</p>
+ <label class="field-label" for="vNationality">Your nationality</label><input class="input-box" id="vNationality" placeholder="e.g. Nigerian">
+ <label class="field-label" for="vDestination">Destination country</label><input class="input-box" id="vDestination" placeholder="e.g. France">
+ <label class="field-label" for="vPurpose">Purpose of travel</label><select class="input-box" id="vPurpose"><option>Tourism</option><option>Study</option><option>Work</option><option>Business</option><option>Family visit</option><option>Relocation</option></select>
+ <label class="field-label" for="vDuration">Expected duration</label><input class="input-box" id="vDuration" placeholder="e.g. 2 weeks">
+ <button class="action-btn" id="makeVisaPlan">Create preparation summary</button><div class="result" id="visaResult"></div></div>
+ <div class="card"><h3 style="font-size:13px">Document preparation checklist</h3>${["Valid passport","Travel purpose and itinerary","Accommodation information","Proof of funds, if required","Supporting documents for your travel purpose","Relevant application forms and fees"].map((x,i)=>`<label class="check-row"><input type="checkbox" data-check="visa-${i}"> ${x}</label>`).join("")}<p class="note">The actual documents depend on your nationality, destination and visa category. Confirm requirements with the destination country's official immigration authority.</p></div>`;
+ else if(d.id==="translator")workspace=`<div class="card"><h3 style="font-size:14px">Translation workspace</h3><label class="field-label">Text to translate</label><textarea class="input-box" id="translateText" placeholder="Enter or paste text here"></textarea><label class="field-label">Target language</label><select class="input-box" id="targetLanguage"><option>French</option><option>English</option><option>Spanish</option><option>German</option><option>Portuguese</option><option>Arabic</option><option>Chinese</option></select><button class="action-btn" id="translateBtn">Prepare translation request</button><div class="result" id="translateResult">Your text is ready to send to a translation provider. Live translation is not connected yet.</div></div>`;
+ else if(d.id==="navigation")workspace=`<div class="card"><h3 style="font-size:14px">Places to plan</h3><label class="field-label">Destination or neighbourhood</label><input class="input-box" id="navPlace" placeholder="City, area or address"><label class="field-label">Place you need</label><select class="input-box" id="navType"><option>Hospital</option><option>Pharmacy</option><option>Bank or ATM</option><option>Public transport</option><option>Grocery store</option><option>Embassy or consulate</option></select><button class="action-btn" id="navSave">Save place to research</button><div class="result" id="navResult"></div><p class="note">Live maps and nearby search are not connected yet.</p></div>`;
+ else if(d.id==="shopping")workspace=`<div class="card"><h3 style="font-size:14px">Product comparison notes</h3><label class="field-label">Product or item</label><input class="input-box" id="shopItem" placeholder="What are you comparing?"><label class="field-label">Option A and price</label><input class="input-box" id="shopA" placeholder="Product / price / currency"><label class="field-label">Option B and price</label><input class="input-box" id="shopB" placeholder="Product / price / currency"><button class="action-btn" id="shopSave">Save comparison</button><div class="result" id="shopResult"></div><p class="note">This records your comparison notes; it does not retrieve live retailer prices.</p></div>`;
+ else if(d.id==="living")workspace=`<div class="card"><h3 style="font-size:14px">Settling-in checklist</h3>${["Research accommodation","Check mobile network and SIM options","Understand local banking requirements","Identify healthcare services","Review local transport options","Check utility and internet arrangements"].map((x,i)=>`<label class="check-row"><input type="checkbox" data-check="living-${i}"> ${x}</label>`).join("")}<p class="note">Tick items as you prepare. Check legal, financial and healthcare requirements with official providers.</p></div>`;
+ else if(d.id==="local")workspace=`<div class="card"><h3 style="font-size:14px">Local research notes</h3><label class="field-label">Country or city</label><input class="input-box" id="localPlace" placeholder="Where are you researching?"><label class="field-label">Topic</label><select class="input-box" id="localTopic"><option>Local laws and rules</option><option>Customs and culture</option><option>Public services</option><option>Emergency contacts</option><option>Work and study norms</option></select><label class="field-label">Your notes</label><textarea class="input-box" id="localNotes" placeholder="Add information and official source links to verify"></textarea><button class="action-btn" id="localSave">Save research note</button><div class="result" id="localResult"></div></div>`;
+ else if(d.id==="assistant")workspace=`<div class="card"><h3 style="font-size:14px;margin-bottom:10px">Journey notes and questions</h3><div class="chat-box" id="assistantChat"><div class="msg bot">I can help organise your planning notes here. Live AI answers are not connected yet.</div></div><textarea class="input-box" id="assistantInput" placeholder="Write a question or a note to organise..."></textarea><button class="action-btn" id="assistantSend">Save note</button></div>`;
+ c.innerHTML=features+workspace;
+ bindDepartmentActions(d.id);
+}
+function saveNote(type,content){const all=getStore("saved",[]);all.unshift({type,content,date:new Date().toLocaleDateString()});setStore("saved",all);renderSaved()}
+function renderSaved(){const items=getStore("saved",[]);$("savedContent").innerHTML=items.length?items.map(x=>`<div class="check-row" style="display:block"><strong>${escapeHtml(x.type)}</strong><div style="margin-top:5px;color:#444">${escapeHtml(x.content)}</div><small style="display:block;color:#666;margin-top:5px">${escapeHtml(x.date)}</small></div>`).join(""):'<div class="empty-state">No saved items yet.</div>'}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function bindDepartmentActions(id){
+ if(id==="visa")$("makeVisaPlan").onclick=()=>{const n=$("vNationality").value.trim(),d=$("vDestination").value.trim(),p=$("vPurpose").value,dur=$("vDuration").value.trim();if(!n||!d){toast("Enter your nationality and destination first.");return}const summary=`Nationality: ${n}. Destination: ${d}. Purpose: ${p}. Duration: ${dur||"Not specified"}. Next: verify the correct visa category, entry rules, documents, fees and processing times with the destination's official immigration authority.`;$("visaResult").textContent=summary;$("visaResult").classList.add("show");saveNote("Visa preparation",summary);toast("Preparation summary saved.")};
+ if(id==="translator")$("translateBtn").onclick=()=>{if(!$("translateText").value.trim()){toast("Enter text first.");return}$("translateResult").classList.add("show")};
+ if(id==="navigation")$("navSave").onclick=()=>{const place=$("navPlace").value.trim();if(!place){toast("Enter a destination or area.");return}const note=`${$("navType").value} — ${place}`;$("navResult").textContent="Saved: "+note;$("navResult").classList.add("show");saveNote("Place to research",note);toast("Place saved.")};
+ if(id==="shopping")$("shopSave").onclick=()=>{const item=$("shopItem").value.trim();if(!item){toast("Enter a product first.");return}const note=`${item}: A: ${$("shopA").value||"Not entered"}; B: ${$("shopB").value||"Not entered"}`;$("shopResult").textContent="Saved comparison: "+note;$("shopResult").classList.add("show");saveNote("Shopping comparison",note);toast("Comparison saved.")};
+ if(id==="local")$("localSave").onclick=()=>{const place=$("localPlace").value.trim(),notes=$("localNotes").value.trim();if(!place||!notes){toast("Add a place and some notes first.");return}const note=`${place} — ${$("localTopic").value}: ${notes}`;$("localResult").textContent="Research note saved.";$("localResult").classList.add("show");saveNote("Local intelligence",note);toast("Research note saved.")};
+ if(id==="assistant")$("assistantSend").onclick=()=>{const v=$("assistantInput").value.trim();if(!v){toast("Write a note first.");return}const row=document.createElement("div");row.className="msg user";row.textContent=v;$("assistantChat").appendChild(row);saveNote("Assistant note",v);$("assistantInput").value="";toast("Note saved.")};
+}
+function loadJourney(){const j=getStore("journey",{});$("origin").value=j.origin||"";$("destination").value=j.destination||"";$("purpose").value=j.purpose||"";$("travelDate").value=j.date||""}
+function renderDepartments(){const grid=$("departmentGrid");grid.innerHTML=departments.map((d,i)=>`<button class="dept-item" data-dept="${d.id}"><span class="dept-circle ${i%2?"tq":""}">${d.icon}</span><span class="dept-label">${d.name}</span></button>`).join("");$("sideDepartments").innerHTML=departments.map(d=>`<button class="side-link" style="width:100%" data-dept="${d.id}">${d.icon} &nbsp; ${d.name}</button>`).join("")}
+/* ===== Accounts =====
+   To use real online accounts (Supabase), fill in the two values below.
+   Leave both empty to run in local-only mode (accounts stay on this device). */
+const SUPABASE_URL="";   // e.g. "https://abcdxyz.supabase.co"
+const SUPABASE_KEY="";   // the "anon public" API key (designed to be public; security comes from the database rules)
+const CLOUD=!!(SUPABASE_URL&&SUPABASE_KEY);
+let cur=null,cache=null,sess=null;
+function users(){try{return JSON.parse(localStorage.getItem("vb_users"))||{}}catch(e){return {}}}
+function persist(u){try{localStorage.setItem("vb_users",JSON.stringify(u));return true}catch(e){toast("Could not save: browser storage is full or blocked.");return false}}
+function curUser(){return cache}
+function getStore(key,fallback){return cache&&cache[key]!==undefined&&cache[key]!==null?cache[key]:fallback}
+function setStore(key,value){if(!cache)return false;cache[key]=value;return saveUser()}
+function saveUser(){if(!CLOUD){const all=users();all[cur]=Object.assign(all[cur]||{},cache);return persist(all)}saveRemote();return true}
+async function sb(path,opt,anon){opt=opt||{};const h=Object.assign({apikey:SUPABASE_KEY,"Content-Type":"application/json"},opt.headers||{});if(sess&&!anon)h.Authorization="Bearer "+sess.access_token;
+ const r=await fetch(SUPABASE_URL+path,Object.assign({},opt,{headers:h}));let j=null;try{j=await r.json()}catch(e){}return{ok:r.ok,status:r.status,json:j}}
+function setSess(j){sess={access_token:j.access_token,refresh_token:j.refresh_token,expires_at:Math.floor(Date.now()/1000)+(j.expires_in||3600),user:j.user||(sess&&sess.user)};try{localStorage.setItem("vb_sb",JSON.stringify(sess))}catch(e){}}
+async function refreshSess(){const r=await sb("/auth/v1/token?grant_type=refresh_token",{method:"POST",body:JSON.stringify({refresh_token:sess.refresh_token})},true);if(!r.ok||!r.json||!r.json.access_token)throw new Error("session expired");setSess(r.json)}
+async function ensureSess(){if(sess.expires_at-60<Date.now()/1000)await refreshSess()}
+async function saveRemote(){try{await ensureSess();const r=await sb("/rest/v1/profiles",{method:"POST",headers:{Prefer:"resolution=merge-duplicates"},body:JSON.stringify({id:sess.user.id,data:cache})});if(!r.ok)throw 0}catch(e){toast("Could not sync to your account. Check your connection.")}}
+async function loadCloudProfile(){await ensureSess();const u=sess.user,md=u.user_metadata||{};const r=await sb("/rest/v1/profiles?id=eq."+u.id+"&select=data");const row=r.ok&&Array.isArray(r.json)&&r.json[0];
+ cache=Object.assign({name:md.name||u.email,country:md.country||"",avatar:"",saved:[]},row?row.data:{});cache.email=u.email;if(!row)saveRemote()}
+function apiMsg(r){const j=r.json||{};return j.msg||j.error_description||j.message||""}
+async function hashPw(pw,salt){const s=salt+":"+pw;try{if(window.crypto&&crypto.subtle){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("")}}catch(e){}let h=5381;for(const c of s)h=((h<<5)+h+c.charCodeAt(0))|0;return "d"+h}
+function authView(v){["welcome","signup","signin"].forEach(x=>$("auth-"+x).hidden=x!==v);document.querySelectorAll(".err").forEach(e=>e.textContent="");window.scrollTo(0,0)}
+function errs(ids){ids.forEach(i=>$(i).textContent="")}
+const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const EXISTS="An account with this email already exists. Please sign in instead.";
+$("signupForm").addEventListener("submit",async e=>{e.preventDefault();
+ errs(["suNameE","suEmailE","suCountryE","suPassE","suPass2E","suFormE"]);
+ const name=$("suName").value.trim().replace(/\s+/g," "),email=$("suEmail").value.trim().toLowerCase(),country=$("suCountry").value.trim(),pw=$("suPass").value,pw2=$("suPass2").value;
+ let first=null;const bad=(id,msg,f)=>{$(id).textContent=msg;if(!first)first=f};
+ if(name.length<2)bad("suNameE","Enter your full name.","suName");
+ if(!EMAIL_RE.test(email))bad("suEmailE","Enter a valid email address.","suEmail");
+ if(!country)bad("suCountryE","Enter your country of residence.","suCountry");
+ if(pw.length<8)bad("suPassE","Password must be at least 8 characters.","suPass");
+ if(pw2!==pw)bad("suPass2E","Passwords do not match.","suPass2");
+ if(first){$(first).focus();return}
+ $("suBtn").disabled=true;
+ try{
+  if(CLOUD){
+   const r=await sb("/auth/v1/signup",{method:"POST",body:JSON.stringify({email,password:pw,data:{name,country}})},true);
+   const u=r.json&&(r.json.user||r.json);
+   if(!r.ok){const m=apiMsg(r);if(/already/i.test(m)||(r.json&&r.json.error_code==="user_already_exists")){bad("suEmailE",EXISTS,"suEmail");$("suEmail").focus()}else $("suFormE").textContent=m||"Could not create your account. Please try again.";return}
+   if(u&&Array.isArray(u.identities)&&u.identities.length===0){bad("suEmailE",EXISTS,"suEmail");$("suEmail").focus();return}
+   if(!r.json.access_token){$("suFormE").textContent="Account created. Check your email to confirm it, then sign in.";return}
+   setSess(r.json);cache=null;await loadCloudProfile();cache.name=name;cache.country=country;saveRemote();
+   $("signupForm").reset();login(email);toast("Account created. Welcome, "+name.split(" ")[0]+"!");return}
+  const all=users();
+  if(all[email]){bad("suEmailE",EXISTS,"suEmail");$("suEmail").focus();return}
+  const salt=Math.random().toString(36).slice(2)+Date.now().toString(36);const hash=await hashPw(pw,salt);
+  all[email]={name,email,country,salt,hash,avatar:"",saved:[],created:Date.now()};
+  if(!persist(all)){$("suFormE").textContent="Account could not be saved on this device.";return}
+  $("signupForm").reset();login(email);toast("Account created. Welcome, "+name.split(" ")[0]+"!")
+ }catch(err){$("suFormE").textContent="Could not reach the server. Check your connection and try again."}
+ finally{$("suBtn").disabled=false}});
+$("signinForm").addEventListener("submit",async e=>{e.preventDefault();
+ errs(["siEmailE","siPassE","siFormE"]);
+ const email=$("siEmail").value.trim().toLowerCase(),pw=$("siPass").value;let first=null;
+ if(!EMAIL_RE.test(email)){$("siEmailE").textContent="Enter a valid email address.";first="siEmail"}
+ if(!pw){$("siPassE").textContent="Enter your password.";first=first||"siPass"}
+ if(first){$(first).focus();return}
+ $("siBtn").disabled=true;
+ try{
+  if(CLOUD){
+   const r=await sb("/auth/v1/token?grant_type=password",{method:"POST",body:JSON.stringify({email,password:pw})},true);
+   if(!r.ok||!r.json||!r.json.access_token){$("siFormE").textContent=/confirm/i.test(apiMsg(r))?"Please confirm your email first, then sign in.":"Incorrect email or password.";return}
+   setSess(r.json);await loadCloudProfile();$("signinForm").reset();login(email);return}
+  const u=users()[email];const ok=u&&(await hashPw(pw,u.salt))===u.hash;
+  if(!ok){$("siFormE").textContent="Incorrect email or password.";return}
+  $("signinForm").reset();login(email)
+ }catch(err){$("siFormE").textContent="Could not reach the server. Check your connection and try again."}
+ finally{$("siBtn").disabled=false}});
+function login(email){cur=email;if(!CLOUD)cache=Object.assign({},users()[email]);try{localStorage.setItem("vb_session",email)}catch(e){}
+ $("auth").hidden=true;$("appRoot").hidden=false;
+ renderDepartments();loadProfile();loadJourney();renderJourneySummary();renderSaved();renderDests();showPage("home");window.scrollTo(0,0)}
+function logout(){if(CLOUD&&sess){sb("/auth/v1/logout",{method:"POST"}).catch(()=>{})}
+ cur=null;cache=null;sess=null;try{localStorage.removeItem("vb_session");localStorage.removeItem("vb_sb")}catch(e){}
+ $("appRoot").hidden=true;$("auth").hidden=false;$("signupForm").reset();$("signinForm").reset();authView("welcome")}
+
+function renderJourneySummary(){const j=getStore("journey",null);
+ $("journeySummary").innerHTML=j?`<div class="jrow"><span>Departing from</span><strong>${escapeHtml(j.origin)}</strong></div><div class="jrow"><span>Destination</span><strong>${escapeHtml(j.destination)}</strong></div><div class="jrow"><span>Purpose</span><strong>${escapeHtml(j.purpose)}</strong></div><div class="jrow" style="border:0"><span>Travel date</span><strong>${j.date?escapeHtml(j.date):"Not set"}</strong></div><button class="secondary-btn" data-page="journey">✎ Edit journey</button>`:'<div class="empty-state">Your journey details have not been added yet.</div><button class="secondary-btn" data-page="journey">Add journey details</button>'}
+const AVATARS=["🧳","✈️","🌍","🧭","🏔️","🌴","📷","🎒"];
+function paintAvatar(el,u){el.style.backgroundImage="";el.textContent="";const a=u.avatar||"";if(a.startsWith("data:")){el.style.backgroundImage="url("+a+")";el.style.backgroundSize="cover";el.style.backgroundPosition="center"}else el.textContent=a||(u.name[0]||"V").toUpperCase()}
+function loadProfile(){const u=curUser();if(!u)return;$("displayName").textContent=u.name;paintAvatar($("avatar"),u);paintAvatar($("profileAvatar"),u);$("profileName").value=u.name;$("profileCountry").value=u.country||"";$("profileEmail").textContent=u.email;
+ $("avatarGrid").innerHTML=AVATARS.map(a=>`<button type="button" class="av-opt ${u.avatar===a?"on":""}" data-avatar="${a}" aria-label="Avatar ${a}">${a}</button>`).join("")}
+const DESTS=[["Paris","France"],["London","United Kingdom"],["Dubai","United Arab Emirates"],["Toronto","Canada"],["Tokyo","Japan"],["Sydney","Australia"],["Berlin","Germany"],["New York","United States"]];
+function renderDests(){$("destChips").innerHTML=DESTS.map((d,i)=>`<button class="dest-chip" data-dest="${i}">${d[0]}</button>`).join("");$("destPanel").classList.remove("show")}
+function selectDest(i){const d=DESTS[i];document.querySelectorAll(".dest-chip").forEach((b,k)=>b.classList.toggle("on",k===i));
+ $("destPanel").innerHTML=`<strong>${d[0]}, ${d[1]}</strong><p style="margin:6px 0 2px">Add it to your journey or start preparing your visa documents.</p><button class="action-btn" id="destUse">Set as my destination</button> <button class="secondary-btn" id="destVisa">Visa guidance</button>`;$("destPanel").classList.add("show");
+ $("destUse").onclick=()=>{const j=Object.assign({origin:"",purpose:"",date:""},getStore("journey",{}));j.destination=d[1];setStore("journey",j);loadJourney();renderJourneySummary();toast("Destination set to "+d[1]+".")};
+ $("destVisa").onclick=()=>{openDepartment("visa");$("vDestination").value=d[1]}}
+document.addEventListener("click",e=>{
+ const t=e.target;let n;
+ if(n=t.closest("[data-auth]")){authView(n.dataset.auth);return}
+ if(t.closest("[data-logout]")){logout();return}
+ if(n=t.closest("[data-avatar]")){setStore("avatar",n.dataset.avatar);loadProfile();toast("Avatar updated.");return}
+ if(n=t.closest("[data-dest]")&&t.closest("#destChips")){selectDest(+t.closest("[data-dest]").dataset.dest);return}
+ const page=t.closest("[data-page]");if(page){showPage(page.dataset.page);return}
+ const dept=t.closest("[data-dept]");if(dept){openDepartment(dept.dataset.dept);return}});
+$("saveJourney").onclick=()=>{const origin=$("origin").value.trim(),destination=$("destination").value.trim(),purpose=$("purpose").value,date=$("travelDate").value;if(!origin||!destination||!purpose){toast("Complete your starting point, destination and purpose.");return}setStore("journey",{origin,destination,purpose,date});$("journeyResult").textContent="Your journey details have been saved.";$("journeyResult").classList.add("show");renderJourneySummary();toast("Journey saved.")};
+$("saveProfile").onclick=()=>{const name=$("profileName").value.trim().replace(/\s+/g," "),country=$("profileCountry").value.trim();if(name.length<2){toast("Enter your full name.");return}if(!country){toast("Enter your country.");return}cache.name=name;cache.country=country;if(saveUser()){loadProfile();toast("Profile updated.")}};
+$("photoBtn").onclick=()=>$("photoInput").click();
+$("avatarReset").onclick=()=>{setStore("avatar","");loadProfile();toast("Using your initial.")};
+$("photoInput").onchange=e=>{const f=e.target.files[0];if(!f)return;if(!f.type.startsWith("image/")){toast("Choose an image file.");return}
+ const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{const s=256,c=document.createElement("canvas");c.width=c.height=s;const m=Math.min(img.width,img.height);c.getContext("2d").drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,s,s);if(setStore("avatar",c.toDataURL("image/jpeg",.85))){loadProfile();toast("Profile photo updated.")}};img.onerror=()=>toast("Could not read that image.");img.src=r.result};r.readAsDataURL(f);e.target.value=""};
+$("profileOpen").onclick=()=>showPage("profile");
+$("notifications").onclick=()=>toast("No new notifications.");
+/* ===== VisaBridge v2 ===== */
+const LOGO='<svg viewBox="0 0 48 48" width="48" height="48" aria-hidden="true"><rect width="48" height="48" rx="14" fill="#8B5E3C"/><path d="M8 33h32" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M10 33C10 22 17 15 24 15s14 7 14 18" fill="none" stroke="#F3EAE2" stroke-width="3.5" stroke-linecap="round"/><path d="M17 33v-8M24 33V15M31 33v-8" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>';
+(function brand(){const u="data:image/svg+xml,"+encodeURIComponent(LOGO.replace("<svg ",'<svg xmlns="http://www.w3.org/2000/svg" '));
+ document.querySelector("link[rel=icon]").href=u;
+ const img=new Image();img.onload=()=>{try{const c=document.createElement("canvas");c.width=c.height=180;c.getContext("2d").drawImage(img,0,0,180,180);const a=document.createElement("link");a.rel="apple-touch-icon";a.href=c.toDataURL("image/png");document.head.appendChild(a)}catch(e){}};img.src=u})();
+(function countries(){try{const dn=new Intl.DisplayNames(["en"],{type:"region"}),out=[],A="ABCDEFGHIJKLMNOPQRSTUVWXYZ";for(const a of A)for(const b of A){try{const n=dn.of(a+b);if(n&&n!==a+b&&!/^Unknown/.test(n))out.push(n)}catch(e){}}
+ $("countries").innerHTML=[...new Set(out)].sort().map(n=>`<option>${n}</option>`).join("")}catch(e){}})();
+const LANGS="af sq am ar hy az eu be bn bs bg ca ceb zh-CN zh-TW co hr cs da nl en eo et fi fr fy gl ka de el gu ht ha haw he hi hmn hu is ig id ga it ja jv kn kk km rw ko ku ky lo la lv lt lb mk mg ms ml mt mi mr mn my ne no ny or ps fa pl pt pa ro ru sm gd sr st sn sd si sk sl so es su sw sv tl tg ta tt te th tr tk uk ur ug uz vi cy xh yi yo zu".split(" ");
+const langName=c=>{try{return new Intl.DisplayNames(["en"],{type:"language"}).of(c)}catch(e){return c}};
+const CUR_BY={Nigeria:"NGN",Ghana:"GHS",Kenya:"KES","South Africa":"ZAR",Egypt:"EGP",Morocco:"MAD","United Kingdom":"GBP","United States":"USD",Canada:"CAD",France:"EUR",Germany:"EUR",Spain:"EUR",Italy:"EUR",Netherlands:"EUR","United Arab Emirates":"AED",India:"INR",China:"CNY",Japan:"JPY",Australia:"AUD",Brazil:"BRL",Mexico:"MXN",Turkey:"TRY","Saudi Arabia":"SAR"};
+const CURS=Intl.supportedValuesOf?Intl.supportedValuesOf("currency"):["USD","EUR","GBP","NGN"];
+const curName=c=>{try{return new Intl.DisplayNames(["en"],{type:"currency"}).of(c)}catch(e){return c}};
+const money=(v,c)=>{try{return new Intl.NumberFormat(undefined,{style:"currency",currency:c}).format(v)}catch(e){return c+" "+v.toFixed(2)}};
+let RATES=null;
+async function loadRates(){if(RATES)return RATES;try{const r=await fetch("https://open.er-api.com/v6/latest/USD");RATES=(await r.json()).rates}catch(e){RATES=null}return RATES}
+const dest=()=>((getStore("journey",{})||{}).destination)||getStore("country","")||"my destination";
+const gsearch=q=>"https://www.google.com/search?q="+encodeURIComponent(q);
+
+/* wrap core functions */
+const _sp=showPage;showPage=function(n){_sp(n);if(n==="wallet")renderWallet();if(n==="notifs")openNotifs();if(n==="settings")renderSettings()};
+const _login=login;login=function(e){_login(e);if(getStore("notifs",null)===null)setStore("notifs",[{t:"Welcome to VisaBridge. Set up your journey to get started.",d:new Date().toLocaleDateString(),r:0}]);refreshBadge();renderWallet()};
+
+/* notifications */
+function refreshBadge(){const n=(getStore("notifs",[])||[]).filter(x=>!x.r).length;$("nBadge").hidden=!n;$("nBadge").textContent=n>99?"99+":n}
+function pushNotif(t){const a=getStore("notifs",[])||[];a.unshift({t,d:new Date().toLocaleString(),r:0});setStore("notifs",a.slice(0,50));refreshBadge()}
+function openNotifs(){const a=getStore("notifs",[])||[];$("notifBox").innerHTML=a.length?`<div class="card">${a.map(x=>`<div class="jrow"><span>${x.r?"":'<i class="dot"></i>'}${escapeHtml(x.t)}<br><small>${escapeHtml(x.d)}</small></span></div>`).join("")}</div><button class="secondary-btn" id="nClear">Clear all</button>`:'<div class="empty-state">You are all caught up.</div>';
+ setStore("notifs",a.map(x=>Object.assign(x,{r:1})));refreshBadge();const c=$("nClear");if(c)c.onclick=()=>{setStore("notifs",[]);openNotifs()}}
+$("notifications").onclick=()=>showPage("notifs");
+$("profileOpen").onclick=()=>showPage("settings");
+
+/* profile */
+const PF={phone:"profilePhone",gender:"profileGender",dob:"profileDob",address:"profileAddress",nationality:"profileNationality",passport:"profilePassport",visaType:"profileVisaType",visaExp:"profileVisaExp",passportExp:"profilePassportExp",visaNo:"profileVisaNo"};
+function loadProfile(){const u=curUser();if(!u)return;$("displayName").textContent=u.name;paintAvatar($("avatar"),u);paintAvatar($("profileAvatar"),u);
+ $("profileName").value=u.name;$("profileCountry").value=u.country||"";$("profileEmail").textContent=u.email;$("profileHeadName").textContent=u.name;
+ for(const k in PF)$(PF[k]).value=u[k]||"";
+ $("avatarGrid").innerHTML=AVATARS.map(a=>`<button type="button" class="av-opt ${u.avatar===a?"on":""}" data-avatar="${a}" aria-label="Avatar ${a}">${a}</button>`).join("")}
+$("profileAvatar").style.cursor="pointer";$("profileAvatar").onclick=()=>{$("avatarPanel").hidden=!$("avatarPanel").hidden};
+$("saveProfile").onclick=()=>{const name=$("profileName").value.trim().replace(/\s+/g," "),country=$("profileCountry").value.trim();if(name.length<2){toast("Enter your full name.");return}if(!country){toast("Enter your country.");return}
+ const keep=$("keepInfo").checked;cache.name=name;cache.country=country;for(const k in PF)cache[k]=keep?$(PF[k]).value.trim():"";
+ if(saveUser()){loadProfile();toast(keep?"Profile saved.":"Saved name and country only.")}};
+function renderSaved(){const items=getStore("saved",[]);$("savedContent").innerHTML=items.length?items.map(x=>`<div class="check-row" style="display:block"><strong>${escapeHtml(x.type)}</strong><div style="margin-top:5px;color:#444">${escapeHtml(x.content)}</div><small style="display:block;color:#666;margin-top:5px">${escapeHtml(x.date)}</small></div>`).join(""):'<div class="empty-state">Notes you save in the workspaces appear here.</div>'}
+
+/* settings */
+function renderSettings(){if(!cache)return;const l=getStore("lang","en"),w=W();
+ $("settingsBox").innerHTML=`<div class="card"><label class="field-label" for="sLang">App language</label><select class="input-box" id="sLang">${LANGS.map(c=>`<option value="${c}" ${c===l?"selected":""}>${escapeHtml(langName(c))}</option>`).join("")}</select><p class="note">The Translator already works in every language listed. Translating the whole app interface is the next step.</p>
+ <label class="field-label" for="sCur">Preferred currency</label><select class="input-box" id="sCur">${CURS.map(c=>`<option value="${c}" ${c===w.cur?"selected":""}>${c} · ${escapeHtml(curName(c))}</option>`).join("")}</select>
+ <label class="check-row"><input type="checkbox" id="sNotif" ${getStore("pushOn",true)?"checked":""}> Show notifications</label></div>
+ <button class="secondary-btn" data-page="profile" style="width:100%">Edit profile</button> <button class="secondary-btn" data-logout style="width:100%">Sign out</button>`;
+ $("sLang").onchange=e=>{setStore("lang",e.target.value);toast("Language saved.")};$("sCur").onchange=e=>{const w=W();w.cur=e.target.value;setStore("wallet",w);toast("Currency saved. Use Switch currency in Wallet to convert your balance.")};$("sNotif").onchange=e=>setStore("pushOn",e.target.checked)}
+
+/* free AI (Pollinations, no key) */
+async function aiChat(msgs){const r=await fetch("https://text.pollinations.ai/openai",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"openai",messages:msgs})});const j=await r.json();return j.choices[0].message.content}
+const aiVision=(p,u)=>aiChat([{role:"user",content:[{type:"text",text:p},{type:"image_url",image_url:{url:u}}]}]);
+const SYS={role:"system",content:"You are the VisaBridge assistant. Help people with visas, travel, moving abroad, money, language and daily life in a new country. Be concise, practical and friendly. Always remind users to confirm visa and legal rules with official government sources."};
+let chatHist=[];
+
+/* translator */
+function speak(t,l){if(!t||!window.speechSynthesis){toast("Speech isn't supported here.");return}const u=new SpeechSynthesisUtterance(t);u.lang=l;speechSynthesis.cancel();speechSynthesis.speak(u)}
+function trHTML(){const o=s=>LANGS.map(c=>`<option value="${c}" ${c===s?"selected":""}>${escapeHtml(langName(c))}</option>`).join("");
+ return `<div class="trbar"><select id="trFrom" class="input-box" aria-label="From"><option value="autodetect">Detect language</option>${o("en")}</select><button class="swap" id="trSwap" aria-label="Swap languages">⇄</button><select id="trTo" class="input-box" aria-label="To">${o("fr")}</select></div>
+ <div class="trcard"><textarea id="trIn" class="trin" placeholder="Type, or tap the mic and speak"></textarea><div class="trtools"><button class="mic" id="trMic" aria-label="Speak">🎙</button><button class="action-btn" id="trGo" style="margin:0">Translate</button></div></div>
+ <div class="trcard out"><div id="trOut" class="trout">Your translation appears here.</div><div class="trtools"><button class="secondary-btn" id="trSay" style="margin:0">🔊 Listen</button><button class="secondary-btn" id="trCopy" style="margin:0">Copy</button></div></div>
+ <label class="check-row"><input type="checkbox" id="trAuto" checked> Speak the translation after voice input</label>`}
+async function trRun(voice){const q=$("trIn").value.trim();if(!q){toast("Type or speak something first.");return}const f=$("trFrom").value,t=$("trTo").value;$("trOut").textContent="Translating…";
+ try{const r=await fetch("https://api.mymemory.translated.net/get?q="+encodeURIComponent(q.slice(0,450))+"&langpair="+encodeURIComponent((f==="autodetect"?"Autodetect":f)+"|"+t));const j=await r.json(),out=j.responseData&&j.responseData.translatedText;if(!out)throw 0;$("trOut").textContent=out;$("trOut").dataset.t=out;if(voice&&$("trAuto").checked)speak(out,t)}catch(e){$("trOut").textContent="Couldn't translate right now. Check your connection and try again."}}
+function trBind(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null;
+ $("trGo").onclick=()=>trRun(false);
+ $("trSwap").onclick=()=>{const f=$("trFrom"),t=$("trTo");if(f.value==="autodetect"){toast("Pick a source language to swap.");return}const a=f.value;f.value=t.value;t.value=a;const i=$("trIn").value;$("trIn").value=$("trOut").dataset.t||"";$("trOut").textContent=i||"Your translation appears here.";$("trOut").dataset.t=i};
+ $("trMic").onclick=()=>{if(!SR){toast("Voice input isn't supported in this browser. Try Chrome or Safari.");return}if(rec){rec.stop();return}
+  rec=new SR();const f=$("trFrom").value;rec.lang=f==="autodetect"?(navigator.language||"en-US"):f;rec.interimResults=true;$("trMic").classList.add("on");
+  rec.onresult=e=>{let s="";for(const r of e.results)s+=r[0].transcript;$("trIn").value=s};
+  rec.onend=()=>{rec=null;$("trMic").classList.remove("on");if($("trIn").value.trim())trRun(true)};
+  rec.onerror=()=>toast("Couldn't hear you. Check microphone permission.");rec.start()};
+ $("trSay").onclick=()=>speak($("trOut").dataset.t||"",$("trTo").value);
+ $("trCopy").onclick=()=>{const t=$("trOut").dataset.t;if(t&&navigator.clipboard){navigator.clipboard.writeText(t);toast("Copied.")}}}
+
+/* navigation */
+function showMap(lat,lon){$("navMap").src=`https://www.openstreetmap.org/export/embed.html?bbox=${lon-.01},${lat-.006},${lon+.01},${lat+.006}&layer=mapnik&marker=${lat},${lon}`}
+async function geocode(q){const r=await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q="+encodeURIComponent(q));const j=await r.json();return j[0]?{lat:+j[0].lat,lon:+j[0].lon,name:j[0].display_name}:null}
+function navHTML(){return `<div class="mapbox"><iframe id="navMap" title="Map" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=-30,-40,60,60&layer=mapnik"></iframe></div>
+ <div class="searchrow"><input id="navQ" class="input-box" placeholder="Search a place, street or address"><button class="action-btn" id="navGo">Search</button></div>
+ <button class="secondary-btn" id="navLoc" style="width:100%;margin-top:0">📍 Show my location</button>
+ <div class="snapgrid"><button class="snap" id="snapPlace"><span>📷</span><b>Snap a place</b><small>Find it on the map</small></button><button class="snap" id="snapSign"><span>🚸</span><b>Snap a road sign</b><small>Learn what it means</small></button></div>
+ <input type="file" id="snapFile" accept="image/*" capture="environment" hidden><div id="snapOut" class="result"></div>`}
+function navBind(){let mode="place";
+ $("navGo").onclick=async()=>{const q=$("navQ").value.trim();if(!q){toast("Enter a place.");return}try{const g=await geocode(q);if(!g){toast("Place not found.");return}showMap(g.lat,g.lon);saveNote("Place to research",g.name)}catch(e){toast("Search unavailable. Check your connection.")}};
+ $("navLoc").onclick=()=>{if(!navigator.geolocation){toast("Location isn't available.");return}navigator.geolocation.getCurrentPosition(p=>showMap(p.coords.latitude,p.coords.longitude),()=>toast("Allow location access to see where you are."))};
+ $("snapPlace").onclick=()=>{mode="place";$("snapFile").click()};$("snapSign").onclick=()=>{mode="sign";$("snapFile").click()};
+ $("snapFile").onchange=e=>{const f=e.target.files[0];e.target.value="";if(!f)return;const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=async()=>{const s=Math.min(1,640/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*s;c.height=im.height*s;c.getContext("2d").drawImage(im,0,0,c.width,c.height);const url=c.toDataURL("image/jpeg",.8),o=$("snapOut");
+  o.innerHTML=`<img src="${url}" alt="Your photo" style="width:100%;border-radius:12px;margin-bottom:8px"><div id="snapTxt">Looking…</div>`;o.classList.add("show");
+  try{if(mode==="sign"){const a=await aiVision("This is a road sign. In one or two plain sentences, say what it means and what a driver or pedestrian should do. Mention if you are unsure.",url);$("snapTxt").textContent=a}
+  else{const a=await aiVision("Identify the place, street or landmark in this photo. First line: Name, City, Country (best guess), or UNKNOWN. Then one short sentence about it.",url);$("snapTxt").textContent=a;const first=a.split("\n")[0];if(!/UNKNOWN/i.test(first)){const g=await geocode(first.replace(/^[^:]*:\s*/,""));if(g){showMap(g.lat,g.lon);$("snapTxt").textContent+="\n\nShown on the map. This is a best guess, so confirm before you rely on it."}}}}
+  catch(err){$("snapTxt").textContent="Couldn't analyse the photo right now. Check your connection and try again."}};im.src=rd.result};rd.readAsDataURL(f)}}
+
+/* tile panels: shopping, living, local */
+const SHOPS=[["🛒","Groceries"],["👕","Fashion"],["📱","Electronics"],["🏠","Home & kitchen"],["💊","Pharmacy"],["🎒","Travel gear"],["📖","Books & school"],["🍽","Restaurants"]];
+const LIVING=[["🏠","Housing",["Research neighbourhoods","Check rental rules and deposits","Book a viewing or short stay"]],["🏦","Banking",["Find banks that serve newcomers","List documents to open an account","Plan how to move money in"]],["📶","SIM & internet",["Compare mobile plans","Check if a passport is needed for a SIM","Set up home internet"]],["🩺","Healthcare",["Check insurance requirements","Find a nearby clinic","Save emergency numbers"]],["🚌","Transport",["Learn the local transit card","Check driving licence rules","Save route apps"]],["💡","Utilities",["Electricity and water set-up","Waste and recycling rules","Keep contract copies"]]];
+const LOCAL=[["⚖️","Laws & rules"],["🤝","Customs & etiquette"],["🚨","Emergency numbers"],["🩺","Healthcare system"],["🚇","Getting around"],["💶","Money & tipping"],["🛡","Safety tips"],["🎉","Holidays & events"]];
+const tiles=(a,cls)=>`<div class="tiles ${cls||""}">${a.map((x,i)=>`<button class="tile" data-t="${i}"><span>${x[0]}</span>${escapeHtml(x[1])}${x[3]?`<small>${x[3]}</small>`:""}</button>`).join("")}</div><div id="tPanel"></div>`;
+function pick(el,i){el.querySelectorAll(".tile").forEach((b,k)=>b.classList.toggle("on",k===i))}
+function renderDepartment(d){const c=$("departmentContent");
+ if(d.id==="translator"){c.innerHTML=trHTML();trBind();return}
+ if(d.id==="navigation"){c.innerHTML=navHTML();navBind();return}
+ if(d.id==="assistant"){c.innerHTML=`<div class="card"><div class="chat-box" id="aChat" style="max-height:48vh"><div class="msg bot">Hi! Ask me about visas, moving abroad, money or daily life.</div></div><div class="chips">${["What documents do I need for a student visa?","How do I open a bank account abroad?","Tips for my first week in a new country"].map(x=>`<button class="dest-chip" data-q="${escapeHtml(x)}">${escapeHtml(x)}</button>`).join("")}</div><div class="searchrow"><input id="aIn" class="input-box" placeholder="Ask anything"><button class="action-btn" id="aSend">Send</button></div><p class="note">Free AI service: answers can be wrong, so confirm important details with official sources.</p></div>`;
+  const send=async t=>{t=(t||$("aIn").value).trim();if(!t)return;$("aIn").value="";const add=(c,x)=>{const m=document.createElement("div");m.className="msg "+c;m.textContent=x;$("aChat").appendChild(m);$("aChat").scrollTop=1e9;return m};add("user",t);const w=add("bot","Thinking…");chatHist.push({role:"user",content:t});
+   try{const a=await aiChat([SYS].concat(chatHist.slice(-10)));w.textContent=a;chatHist.push({role:"assistant",content:a})}catch(e){w.textContent="I couldn't reach the AI service. Check your connection and try again.";chatHist.pop()}};
+  $("aSend").onclick=()=>send();$("aIn").onkeydown=e=>{if(e.key==="Enter")send()};c.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>send(b.dataset.q));return}
+ if(d.id==="shopping"){const st=getStore("shop",{});c.innerHTML=`<div class="searchrow"><input id="shQ" class="input-box" placeholder="Search any product"><button class="action-btn" id="shGo">Search</button></div><div class="section-head" style="margin-top:6px"><strong>Shop by floor</strong></div>`+tiles(SHOPS.map(s=>[s[0],s[1],0,((st[s[1]]||[]).length||"No")+" items"]),"shop");
+  $("shGo").onclick=()=>{const q=$("shQ").value.trim();if(q)window.open("https://www.google.com/search?tbm=shop&q="+encodeURIComponent(q),"_blank","noopener")};
+  c.querySelectorAll(".tile").forEach(b=>b.onclick=()=>{const i=+b.dataset.t,n=SHOPS[i][1];pick(c,i);const st=getStore("shop",{}),L=st[n]||[];
+   $("tPanel").innerHTML=`<div class="card"><h3 class="sh">${escapeHtml(n)} list</h3>${L.map(x=>`<div class="check-row">${escapeHtml(x)}</div>`).join("")||'<div class="empty-state">Nothing here yet.</div>'}<div class="searchrow" style="margin-top:10px"><input id="shAdd" class="input-box" placeholder="Add an item"><button class="action-btn" id="shAddB">Add</button></div><a class="link-btn" target="_blank" rel="noopener" href="${gsearch("best "+n+" shops in "+dest())}">Find shops in ${escapeHtml(dest())}</a></div>`;
+   $("shAddB").onclick=()=>{const v=$("shAdd").value.trim();if(!v)return;const s=getStore("shop",{});s[n]=(s[n]||[]).concat(v);setStore("shop",s);renderDepartment(d);c.querySelectorAll(".tile")[i].click()}});return}
+ if(d.id==="living"){const ck=()=>getStore("checks",{});const pr=i=>{const k=ck(),n=LIVING[i][2].filter((_,j)=>k["l"+i+"-"+j]).length;return n+" of "+LIVING[i][2].length+" done"};
+  c.innerHTML=`<p class="workspace-intro" style="margin:0 0 12px">Tap an area to see what to sort out first.</p>`+tiles(LIVING.map((x,i)=>[x[0],x[1],0,pr(i)]));
+  c.querySelectorAll(".tile").forEach(b=>b.onclick=()=>{const i=+b.dataset.t,x=LIVING[i];pick(c,i);const k=ck(),n=x[2].filter((_,j)=>k["l"+i+"-"+j]).length;
+   $("tPanel").innerHTML=`<div class="card"><h3 class="sh">${escapeHtml(x[1])}</h3><div class="bar"><i style="width:${n/x[2].length*100}%"></i></div>${x[2].map((t,j)=>`<label class="check-row"><input type="checkbox" data-k="l${i}-${j}" ${k["l"+i+"-"+j]?"checked":""}> ${escapeHtml(t)}</label>`).join("")}<a class="link-btn" target="_blank" rel="noopener" href="${gsearch(x[1]+" for newcomers in "+dest())}">Learn more about ${escapeHtml(x[1].toLowerCase())} in ${escapeHtml(dest())}</a></div>`;
+   $("tPanel").querySelectorAll("[data-k]").forEach(cb=>cb.onchange=()=>{const k=ck();k[cb.dataset.k]=cb.checked;setStore("checks",k);renderDepartment(d);c.querySelectorAll(".tile")[i].click()})});return}
+ if(d.id==="local"){c.innerHTML=`<div class="card"><label class="field-label" for="lcPlace" style="margin-top:0">Where are you?</label><input id="lcPlace" class="input-box" list="countries" value="${escapeHtml(dest()==="my destination"?"":dest())}" placeholder="Country or city"></div><div class="section-head" style="margin:8px 0"><strong>What to know here</strong></div>`+tiles(LOCAL)+`<div class="searchrow"><input id="lcQ" class="input-box" placeholder="Search something else about this place"><button class="action-btn" id="lcGo">Search</button></div>`;
+  const place=()=>$("lcPlace").value.trim();
+  $("lcGo").onclick=()=>{const q=$("lcQ").value.trim();if(!q){toast("Type what you want to know.");return}window.open(gsearch(q+" "+place()),"_blank","noopener")};
+  c.querySelectorAll(".tile").forEach(b=>b.onclick=async()=>{const i=+b.dataset.t,n=LOCAL[i][1];if(!place()){toast("Enter a country or city first.");return}pick(c,i);$("tPanel").innerHTML=`<div class="card"><h3 class="sh">${escapeHtml(n)} · ${escapeHtml(place())}</h3><div id="lcTxt" class="note" style="font-size:13px;color:var(--text-main);white-space:pre-wrap">Loading…</div><a class="link-btn" target="_blank" rel="noopener" href="${gsearch(n+" "+place())}">Search more</a><button class="secondary-btn" id="lcSave">Save to notes</button></div>`;
+   try{const a=await aiChat([SYS,{role:"user",content:`In under 120 words, give a visitor or newcomer the key things to know about "${n}" in ${place()}. Use short plain sentences.`}]);$("lcTxt").textContent=a;$("lcSave").onclick=()=>{saveNote("Local intelligence",n+" — "+place()+": "+a);toast("Saved.")}}catch(e){$("lcTxt").textContent="Couldn't load this right now. Use Search more instead."}});return}
+ renderDepartmentOld(d)}
+(function(){const c=$("countries");if(c&&!c.children.length)c.innerHTML="<option>Nigeria</option><option>United States</option>"})();
+
+/* ===== VisaBridge v3: security, validation, wallet, reminders ===== */
+const PAYMENTS={live:false,provider:null}; /* when licensed: set live:true and the provider name, then connect it inside payAdapter() */
+async function payAdapter(op,data){if(!PAYMENTS.live)return{ok:true,demo:true};return{ok:false,error:"Payment provider isn't configured yet."}}
+const isCountry=v=>[...$("countries").options].some(o=>o.value.toLowerCase()===String(v).trim().toLowerCase());
+const V={
+ junk:s=>{s=String(s).replace(/\s/g,"");return /^(.)\1+$/.test(s)||"01234567890123456789".includes(s)||"98765432109876543210".includes(s)},
+ luhn:n=>{let s=0,d=false;for(let i=n.length-1;i>=0;i--){let x=+n[i];if(d){x*=2;if(x>9)x-=9}s+=x;d=!d}return n.length>=13&&n.length<=19&&s%10===0},
+ iban:s=>{s=s.replace(/\s/g,"").toUpperCase();if(!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(s))return false;let m=0;for(const c of s.slice(4)+s.slice(0,4)){const v=/\d/.test(c)?c:String(c.charCodeAt(0)-55);for(const ch of v)m=(m*10+ +ch)%97}return m===1},
+ phone:p=>/^\+?\d{7,15}$/.test(p.replace(/[\s\-().]/g,"")),
+ exp:s=>{const m=/^(0[1-9]|1[0-2])\s*\/\s*(\d{2})$/.exec(s.trim());return !!m&&new Date(2000+ +m[2],+m[1],1)>new Date()},
+ pass:s=>/^[A-Z0-9]{6,9}$/i.test(s)&&!V.junk(s),
+ visa:s=>/^[A-Z0-9\-]{6,20}$/i.test(s)&&!V.junk(s)
+};
+const today0=()=>{const d=new Date();d.setHours(0,0,0,0);return d};
+const dateOf=s=>new Date(s+"T00:00:00");
+
+/* password eye + strength */
+document.querySelectorAll("input[type=password]").forEach(i=>{const w=document.createElement("div");w.className="pwwrap";i.parentNode.insertBefore(w,i);w.appendChild(i);const b=document.createElement("button");b.type="button";b.className="eye";b.setAttribute("aria-label","Show password");b.textContent="👁";b.onclick=()=>{const s=i.type==="password";i.type=s?"text":"password";b.textContent=s?"🙈":"👁";b.setAttribute("aria-label",s?"Hide password":"Show password")};w.appendChild(b)});
+function pwScore(p){let s=0;if(p.length>=8)s++;if(p.length>=12)s++;if(/[a-z]/.test(p)&&/[A-Z]/.test(p))s++;if(/\d/.test(p))s++;if(/[^A-Za-z0-9]/.test(p))s++;return Math.min(s,4)}
+function meter(inp){const w=inp.parentNode;const m=document.createElement("div");m.innerHTML='<div class="meter"><i></i></div><small class="note" style="display:block;margin:4px 0 0"></small>';w.after(m);inp.addEventListener("input",()=>{const s=inp.value?pwScore(inp.value):0;m.querySelector("i").style.width=s*25+"%";m.querySelector("small").textContent=inp.value?["Very weak","Weak","Fair","Good","Strong"][s]+" · use 8+ characters with letters and numbers":""})}
+meter($("suPass"));meter($("rpPass"));
+let pendingPhone="";
+$("signupForm").addEventListener("submit",e=>{const p=$("suPass").value,ph=$("suPhone").value.trim();let bad=null;
+ if(!isCountry($("suCountry").value))bad=["suCountryE","Choose your country from the list."];
+ else if(p.length>=8&&!(/[A-Za-z]/.test(p)&&/\d/.test(p)))bad=["suPassE","Use at least one letter and one number."];
+ else if(ph&&!V.phone(ph))bad=["suPhoneE","That phone number doesn't look right. Include the country code, e.g. +234…"];
+ if(bad){e.preventDefault();e.stopImmediatePropagation();$(bad[0]).textContent=bad[1];return}pendingPhone=ph},true);
+const _auth=authView;authView=function(v){["welcome","signup","signin","forgot","reset"].forEach(x=>$("auth-"+x).hidden=x!==v);document.querySelectorAll(".err").forEach(e=>e.textContent="");window.scrollTo(0,0);if(v==="signin")bioButton()};
+
+/* forgot / reset password */
+$("forgotForm").addEventListener("submit",async e=>{e.preventDefault();const email=$("fpEmail").value.trim().toLowerCase(),o=$("fpFormE");if(!EMAIL_RE.test(email)){o.textContent="Enter a valid email address.";return}
+ if(!CLOUD){o.textContent="Password reset emails need the online account server, which isn't connected yet. For now, accounts live on this device only.";return}
+ $("fpBtn").disabled=true;try{await sb("/auth/v1/recover",{method:"POST",body:JSON.stringify({email})},true);o.style.background="var(--cream)";o.style.color="var(--text-main)";o.textContent="If that email is registered, a reset link is on its way."}catch(err){o.textContent="Could not reach the server. Try again."}finally{$("fpBtn").disabled=false}});
+$("resetForm").addEventListener("submit",async e=>{e.preventDefault();const p=$("rpPass").value,p2=$("rpPass2").value,o=$("rpFormE");
+ if(p.length<8||!/[A-Za-z]/.test(p)||!/\d/.test(p)){o.textContent="Use 8+ characters with at least one letter and one number.";return}if(p!==p2){o.textContent="Passwords do not match.";return}
+ const r=await sb("/auth/v1/user",{method:"PUT",body:JSON.stringify({password:p})});if(!r.ok){o.textContent=apiMsg(r)||"This reset link has expired. Request a new one.";return}
+ sess=null;history.replaceState(null,"",location.pathname);authView("signin");$("authNote").textContent="Password updated. Sign in with your new password."});
+
+/* inactivity sign-out */
+let idleT=null;const idleMs=()=>(cache&&cache.idleMin||30)*60000;
+function bump(){clearTimeout(idleT);if(!cur)return;try{localStorage.setItem("vb_last",Date.now())}catch(e){}idleT=setTimeout(expire,idleMs())}
+function expire(){if(!cur)return;logout();$("authNote").textContent="You were signed out after a period of inactivity. Please sign in again."}
+["click","keydown","touchstart","scroll"].forEach(ev=>addEventListener(ev,bump,{passive:true}));
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&cur){const l=+localStorage.getItem("vb_last")||Date.now();if(Date.now()-l>idleMs())expire();else checkReminders()}});
+
+/* reminders: 15, 5 and 1 day before */
+function checkReminders(){if(!cache)return;const j=getStore("journey",{})||{},items=[["Your trip to "+(j.destination||"your destination"),j.date],["Your visa expires",cache.visaExp],["Your passport expires",cache.passportExp]].filter(x=>x[1]),done=Object.assign({},getStore("rem",{}));let ch=false;
+ items.forEach(([t,d])=>{const days=Math.round((dateOf(d)-today0())/864e5);let n=days<0?-1:[1,5,15].find(k=>days<=k);if(n===undefined)return;const k=t+d+n;if(done[k])return;done[k]=1;ch=true;
+  const msg=days<0?t+" — date has passed ("+d+")":days===0?t+" today":t+" in "+days+" day"+(days===1?"":"s");pushNotif(msg);try{if(window.Notification&&Notification.permission==="granted")new Notification("VisaBridge",{body:msg,icon:document.querySelector("link[rel=apple-touch-icon]")?.href})}catch(e){}});
+ if(ch)setStore("rem",done)}
+const _on=openNotifs;openNotifs=function(){_on();if(window.Notification&&Notification.permission==="default"){$("notifBox").insertAdjacentHTML("afterbegin",'<div class="card"><button class="action-btn" id="nPerm" style="margin:0">Turn on phone alerts</button><p class="note">Reminders arrive 15, 5 and 1 day before your plans while VisaBridge is open. Alerts when the app is closed need a push service (Firebase or OneSignal).</p></div>');$("nPerm").onclick=()=>Notification.requestPermission().then(()=>openNotifs())}};
+setInterval(checkReminders,36e5);
+
+/* validated profile + journey */
+$("saveProfile").onclick=()=>{const g=k=>$(PF[k]).value.trim(),name=$("profileName").value.trim().replace(/\s+/g," "),country=$("profileCountry").value.trim();let e=null;
+ if(name.length<2||!/^[\p{L}][\p{L}\s.'\-]+$/u.test(name))e=["profileName","Enter your real full name (letters only)."];
+ else if(!isCountry(country))e=["profileCountry","Choose your country from the list."];
+ else if(g("phone")&&!V.phone(g("phone")))e=[PF.phone,"That phone number doesn't look right. Include the country code."];
+ else if(g("dob")&&(dateOf(g("dob"))>today0()||dateOf(g("dob")).getFullYear()<1900))e=[PF.dob,"That date of birth isn't possible."];
+ else if(g("passport")&&!V.pass(g("passport")))e=[PF.passport,"A passport number has 6 to 9 letters or digits. Check it against your passport."];
+ else if(g("passportExp")&&dateOf(g("passportExp"))<today0())e=[PF.passportExp,"This passport has already expired. Check the date."];
+ else if(g("visaNo")&&!V.visa(g("visaNo")))e=[PF.visaNo,"That visa number doesn't look right. It usually has 6 to 20 letters, digits or dashes."];
+ else if(g("visaExp")&&dateOf(g("visaExp"))<today0())e=[PF.visaExp,"This visa has already expired. Check the date."];
+ if(e){toast(e[1]);$(e[0]).focus();return}
+ const keep=$("keepInfo").checked;cache.name=name;cache.country=country;for(const k in PF)cache[k]=keep?g(k):"";
+ if(saveUser()){loadProfile();checkReminders();toast(keep?"Profile saved.":"Saved name and country only.");
+  if(keep&&g("passportExp")&&(dateOf(g("passportExp"))-today0())/864e5<183)setTimeout(()=>toast("Many countries need 6 months of passport validity. Yours is shorter."),2500)}};
+const _sj=$("saveJourney").onclick;$("saveJourney").onclick=()=>{const o=$("origin").value.trim(),d=$("destination").value.trim(),t=$("travelDate").value;
+ if(o&&!isCountry(o)){toast("Choose the origin country from the list.");return}if(d&&!isCountry(d)){toast("Choose the destination country from the list.");return}
+ if(o&&d&&o.toLowerCase()===d.toLowerCase()){toast("Origin and destination are the same.");return}if(t&&dateOf(t)<today0()){toast("That travel date has already passed.");return}_sj();checkReminders()};
+
+/* invite */
+$("inviteBtn").onclick=async()=>{const data={title:"VisaBridge",text:"I'm using VisaBridge to plan my travel. Join me:",url:location.href.split("#")[0]};try{if(navigator.share)await navigator.share(data);else{await navigator.clipboard.writeText(data.text+" "+data.url);toast("Invite link copied.")}}catch(e){}};
+
+/* biometrics (WebAuthn, device-level) */
+const bioSupported=async()=>!!(window.PublicKeyCredential&&PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable&&await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(()=>false));
+const b64=b=>btoa(String.fromCharCode(...new Uint8Array(b))),unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const bioRec=()=>{try{return JSON.parse(localStorage.getItem("vb_bio"))||{}}catch(e){return{}}};
+async function bioEnable(){const cred=await navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rp:{name:"VisaBridge"},user:{id:crypto.getRandomValues(new Uint8Array(16)),name:cur,displayName:cache.name},pubKeyCredParams:[{type:"public-key",alg:-7},{type:"public-key",alg:-257}],authenticatorSelection:{authenticatorAttachment:"platform",userVerification:"required"},timeout:60000}});
+ const r=bioRec();r[cur]={id:b64(cred.rawId),sess:CLOUD?sess:null};localStorage.setItem("vb_bio",JSON.stringify(r));localStorage.setItem("vb_bio_last",cur)}
+async function bioButton(){const b=$("bioLogin"),last=localStorage.getItem("vb_bio_last");b.hidden=!(last&&bioRec()[last]&&await bioSupported())}
+$("bioLogin").onclick=async()=>{const last=localStorage.getItem("vb_bio_last"),rec=bioRec()[last];if(!rec)return;
+ try{await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:"public-key",id:unb64(rec.id)}],userVerification:"required",timeout:60000}});
+  if(CLOUD){sess=rec.sess;await ensureSess();await loadCloudProfile()}login(last)}catch(e){$("siFormE").textContent="Biometric sign-in didn't work. Use your password instead."}};
+
+/* security center */
+async function renderSecurity(){if(!cache)return;const rec=bioRec()[cur],sup=await bioSupported(),act=getStore("activity",[])||[];
+ $("secBox").innerHTML=`<div class="card"><h3 class="sh">Face ID and fingerprint</h3>${sup?`<label class="check-row"><input type="checkbox" id="bioOn" ${rec?"checked":""}> Sign in with this device's biometrics</label><p class="note">Your device checks your face or fingerprint. VisaBridge never receives or stores biometric data, and your password always works too. This unlocks this device only. Passkey checks on a server need the online backend.</p>`:'<p class="note">This browser or device doesn\'t support biometric sign-in. It needs a secure (https) page and a fingerprint or face sensor. Use your password instead.</p>'}</div>
+ <div class="card"><h3 class="sh">Automatic sign-out</h3><select id="idleSel" class="input-box">${[5,15,30,60].map(m=>`<option value="${m}" ${m===(cache.idleMin||30)?"selected":""}>After ${m} minutes of inactivity</option>`).join("")}</select></div>
+ <div class="card"><h3 class="sh">Two-factor authentication</h3><label class="check-row"><input type="checkbox" disabled> Ask for a code at sign-in</label><p class="note">Needs an authenticator or SMS service that isn't connected yet.</p></div>
+ <div class="card"><h3 class="sh">Email verification</h3><p class="note">${CLOUD?"Verification emails are sent by your account server when you register.":"Not available while accounts are stored on this device only."}</p></div>
+ <div class="card"><h3 class="sh">Login activity</h3>${act.map(a=>`<div class="jrow"><span>${escapeHtml(a.d)}</span><strong>${escapeHtml(a.t)}</strong></div>`).join("")||'<div class="empty-state">No activity yet.</div>'}<button class="secondary-btn" data-logout>Sign out of this device</button><p class="note">Seeing every device on your account needs the online account server.</p></div>
+ <div class="card"><h3 class="sh">Delete account</h3><p class="note">This permanently removes your account and data. Type your email to confirm.</p><input id="delEmail" class="input-box" placeholder="${escapeHtml(cache.email)}"><button class="action-btn" id="delGo" style="background:#B3261E">Delete my account</button></div>`;
+ if(sup)$("bioOn").onchange=async e=>{if(e.target.checked){try{await bioEnable();toast("Biometric sign-in is on.")}catch(err){e.target.checked=false;toast("Biometric setup was cancelled or blocked.")}}else{const r=bioRec();delete r[cur];localStorage.setItem("vb_bio",JSON.stringify(r));toast("Biometric sign-in is off.")}};
+ $("idleSel").onchange=e=>{cache.idleMin=+e.target.value;saveUser();bump();toast("Saved.")};
+ $("delGo").onclick=async()=>{if($("delEmail").value.trim().toLowerCase()!==cache.email.toLowerCase()){toast("Type your email exactly to confirm.");return}const em=cur;
+  try{if(CLOUD){await ensureSess();await sb("/rest/v1/profiles?id=eq."+sess.user.id,{method:"DELETE"})}else{const all=users();delete all[em];persist(all)}const r=bioRec();delete r[em];localStorage.setItem("vb_bio",JSON.stringify(r))}catch(e){toast("Could not delete. Try again.");return}
+  logout();$("authNote").textContent=CLOUD?"Your data was deleted. Removing the sign-in record itself needs a server function.":"Your account was deleted from this device."}}
+const _sp3=showPage;showPage=function(n){_sp3(n);if(n==="security")renderSecurity()};
+const _lg=login;login=function(e){_lg(e);const ua=navigator.userAgent,br=/Edg/.test(ua)?"Edge":/Firefox/.test(ua)?"Firefox":/Chrome/.test(ua)?"Chrome":/Safari/.test(ua)?"Safari":"Browser",a=getStore("activity",[])||[];
+ a.unshift({d:br+" on "+((navigator.userAgentData&&navigator.userAgentData.platform)||navigator.platform||"device"),t:new Date().toLocaleString()});cache.activity=a.slice(0,10);if(pendingPhone&&!cache.phone){cache.phone=pendingPhone;loadProfile()}pendingPhone="";saveUser();bump();checkReminders()};
+const _lo=logout;logout=function(){clearTimeout(idleT);_lo()};
+
+/* wallet */
+const NET={Nigeria:[["MTN","Airtel","Glo","9mobile","Spectranet","Smile"],"Most people buy data bundles by phone number from their mobile network."],Ghana:[["MTN","Telecel","AirtelTigo"],"Data bundles are bought by phone number, often with mobile money."],Kenya:[["Safaricom","Airtel","Telkom","Zuku"],"Data bundles by phone number (M-Pesa is common), or a monthly home-fibre plan."],"South Africa":[["Vodacom","MTN","Cell C","Telkom","Afrihost"],"Prepaid data by phone number, or a monthly fibre contract."],"United Kingdom":[["EE","O2","Vodafone","Three","BT","Sky","Virgin Media"],"Mobile data comes with a SIM plan. Home broadband is a monthly contract."],"United States":[["Verizon","AT&T","T-Mobile","Xfinity","Spectrum"],"Mobile plans come from carriers. Home internet is a monthly account."],Canada:[["Rogers","Bell","Telus","Freedom"],"Mobile plans from carriers. Home internet is a monthly account."],India:[["Jio","Airtel","Vi","BSNL"],"Prepaid recharge by phone number."],"United Arab Emirates":[["e&","du"],"Prepaid data by phone number, or a home plan with an Emirates ID."],France:[["Orange","SFR","Free","Bouygues"],"SIM plans for mobile data, monthly box contracts for home internet."],Germany:[["Telekom","Vodafone","O2"],"Prepaid SIM data or a monthly home contract."]};
+function W(){return Object.assign({cur:CUR_BY[getStore("country","")]||"USD",bal:0,tx:[],bens:[]},getStore("wallet",{}))}
+const saveW=w=>setStore("wallet",w);
+const recents=()=>{const s=new Set(),o=[];for(const t of W().tx)if(t.to){const k=t.to.kind+t.to.detail;if(!s.has(k)){s.add(k);o.push(t.to)}}return o.slice(0,5)};
+function renderWallet(){if(!cache)return;const w=W();
+ $("walletBox").innerHTML=`<div class="card" style="background:var(--cream)"><strong style="font-size:13px">${PAYMENTS.live?"Live payments":"Demo mode"}</strong><p class="note" style="margin:4px 0 0">${PAYMENTS.live?"Connected to "+escapeHtml(PAYMENTS.provider||"your provider")+".":"Balances are recorded on this device only. Real card, bank and crypto payments switch on when a licensed payment provider is connected. Full card numbers are never stored."}</p></div>
+ <div class="wcard"><small>Wallet balance</small><strong>${money(w.bal,w.cur)}</strong><div class="wrow"><select id="wCur" class="input-box" aria-label="Currency">${CURS.map(c=>`<option value="${c}" ${c===w.cur?"selected":""}>${c} · ${escapeHtml(curName(c))}</option>`).join("")}</select><button class="pill-cta" id="wConv">Switch currency</button></div></div>
+ <div class="wactions"><button data-w="deposit"><span>＋</span>Deposit</button><button data-w="transfer"><span>⇄</span>Send</button><button data-w="withdraw"><span>↓</span>Withdraw</button><button data-w="internet"><span>📶</span>Internet</button></div><div id="wSheet"></div>
+ <div class="section-head"><strong>Saved beneficiaries</strong></div><div class="card">${w.bens.length?w.bens.map((b,i)=>`<div class="jrow"><span>${escapeHtml(b.name)}<br><small>${escapeHtml(b.kind==="bank"?b.bank+" ••"+b.detail.slice(-4):b.kind==="crypto"?b.asset+" ••"+b.detail.slice(-4):b.detail)}</small></span><button class="link-btn" data-bd="${i}" style="margin:0">Remove</button></div>`).join(""):'<div class="empty-state">Tick "Save as beneficiary" when you send money to keep people here.</div>'}</div>
+ <div class="section-head"><strong>Recent activity</strong></div><div class="card">${w.tx.length?w.tx.slice(0,20).map(t=>`<div class="jrow"><span>${escapeHtml(t.label)}<br><small>${escapeHtml(t.date)}</small></span><strong>${t.amt?(t.amt>0?"+":"")+money(t.amt,t.cur):"Pending"}</strong></div>`).join(""):'<div class="empty-state">No activity yet. Add money to get started.</div>'}</div>`;
+ document.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>walletSheet(b.dataset.w));
+ document.querySelectorAll("[data-bd]").forEach(b=>b.onclick=()=>{const w=W();w.bens.splice(+b.dataset.bd,1);saveW(w);renderWallet()});
+ $("wConv").onclick=async()=>{const to=$("wCur").value,w=W();if(to===w.cur)return;const R=await loadRates();if(!R||!R[to]||!R[w.cur]){toast("Exchange rates unavailable. Try again online.");return}w.bal=Math.round(w.bal/R[w.cur]*R[to]*100)/100;w.tx.unshift({label:`Converted ${w.cur} → ${to}`,amt:0,cur:to,date:new Date().toLocaleString()});w.cur=to;saveW(w);renderWallet();toast("Wallet now in "+to+".")}}
+const sel=(id,o)=>`<select id="${id}" class="input-box">${o.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join("")}</select>`;
+const bankHTML=()=>`<label class="field-label">Bank country</label><input id="wCountry" class="input-box" list="countries" value="${escapeHtml(getStore("country",""))}"><label class="field-label">Bank name</label><input id="wBank" class="input-box" placeholder="e.g. GTBank, Barclays, Chase"><label class="field-label">Account number or IBAN</label><input id="wAcct" class="input-box" autocomplete="off"><label class="field-label">Account holder name</label><input id="wHolder" class="input-box">`;
+function readBank(){const c=$("wCountry").value.trim(),b=$("wBank").value.trim(),a=$("wAcct").value.replace(/\s/g,""),h=$("wHolder").value.trim();
+ if(!isCountry(c))return"Choose the bank's country from the list.";if(b.length<2)return"Enter the bank name.";if(!(V.iban(a)||/^\d{6,20}$/.test(a))||V.junk(a))return"That account number doesn't look valid. Check it against your bank statement.";if(h.length<2)return"Enter the account holder name.";return{kind:"bank",name:h,detail:a,bank:b,country:c}}
+function drawNet(){const c=$("iCountry").value.trim(),n=NET[c];$("iProv").innerHTML=(n?`<label class="field-label">Provider</label><select id="iP" class="input-box">${n[0].map(p=>`<option>${escapeHtml(p)}</option>`).join("")}</select><p class="note">${escapeHtml(n[1])}</p>`:`<label class="field-label">Provider</label><input id="iP" class="input-box" placeholder="Provider name"><a class="link-btn" target="_blank" rel="noopener" href="${gsearch("how to buy mobile data and home internet in "+(c||"my country"))}">How people buy internet in ${escapeHtml(c||"your country")}</a>`)+`<label class="field-label">Plan type</label><select id="iT" class="input-box"><option>Mobile data bundle</option><option>Home broadband</option></select><label class="field-label">Phone number or account number</label><input id="iN" class="input-box" inputmode="tel" autocomplete="off">`}
+function walletSheet(kind){const w=W(),T={deposit:"Add money",transfer:"Send money",withdraw:"Withdraw",internet:"Buy internet"}[kind];
+ let h=`<div class="card"><h3 class="sh">${T}</h3>`;
+ if(kind==="deposit")h+=`<label class="field-label">Method</label>${sel("wm",[["card","Debit or credit card"],["bank","Bank transfer from my bank"],["crypto","Crypto wallet"]])}`;
+ else if(kind==="transfer")h+=`<div id="wRec"></div><label class="field-label">Send to</label>${sel("wm",[["wallet","A VisaBridge wallet"],["bank","A bank account"]])}`;
+ else if(kind==="withdraw")h+=`<div id="wRec"></div><label class="field-label">Withdraw to</label>${sel("wm",[["bank","A bank account"],["crypto","A crypto wallet"]])}`;
+ h+=`<div id="wX"></div><label class="field-label">Amount (${w.cur})</label><input id="wAmt" class="input-box" type="number" min="0" step="0.01" inputmode="decimal"><label class="check-row" id="wSaveRow" hidden><input type="checkbox" id="wSave"> Save as beneficiary</label><button class="action-btn" id="wGo">Confirm</button></div>`;
+ $("wSheet").innerHTML=h;const m=()=>$("wm")?$("wm").value:"internet";
+ const draw=()=>{const v=m();let x="";
+  if(kind==="internet"){x=`<label class="field-label">Country</label><input id="iCountry" class="input-box" list="countries" value="${escapeHtml(getStore("country",""))}"><div id="iProv"></div>`}
+  else if(v==="card")x=`<label class="field-label">Card number</label><input id="wNum" class="input-box" inputmode="numeric" autocomplete="cc-number" placeholder="1234 5678 9012 3456"><label class="field-label">Name on card</label><input id="wName" class="input-box" autocomplete="cc-name"><div class="two"><div><label class="field-label">Expiry</label><input id="wExp" class="input-box" autocomplete="cc-exp" placeholder="MM/YY"></div><div><label class="field-label">CVC</label><input id="wCvc" class="input-box" inputmode="numeric" autocomplete="cc-csc"></div></div>`;
+  else if(v==="bank")x=bankHTML()+(kind==="deposit"?'<p class="note">Bank pulls switch on when a payment provider is connected.</p>':"");
+  else if(v==="wallet")x=`<label class="field-label">Email, phone or wallet ID</label><input id="wTo" class="input-box" autocomplete="off">`;
+  else x=`<label class="field-label">Asset</label>${sel("wAsset",[["BTC","Bitcoin"],["ETH","Ethereum"],["USDT","USDT (ERC-20)"],["USDC","USDC (ERC-20)"]])}`+(kind==="withdraw"?`<label class="field-label">Wallet address</label><input id="wTo" class="input-box" autocomplete="off">`:'<p class="note">Your deposit address is created by the wallet provider once connected. This records a pending request.</p>');
+  $("wX").innerHTML=x;$("wSaveRow").hidden=!(kind==="transfer"||kind==="withdraw");if(kind==="internet"){drawNet();$("iCountry").onchange=drawNet}};
+ if($("wm"))$("wm").onchange=draw;draw();
+ if($("wRec")){const l=w.bens.concat(recents()).filter((b,i,a)=>a.findIndex(x=>x.kind+x.detail===b.kind+b.detail)===i&&(kind==="withdraw"?b.kind!=="wallet":b.kind!=="crypto"));
+  $("wRec").innerHTML=l.length?`<label class="field-label">Saved and recent</label><div class="chips">${l.map((b,i)=>`<button type="button" class="dest-chip" data-r="${i}">${escapeHtml(b.name)}${b.bank?" · "+escapeHtml(b.bank):""}</button>`).join("")}</div>`:"";
+  $("wRec").querySelectorAll("[data-r]").forEach(c=>c.onclick=()=>{const b=l[+c.dataset.r];$("wm").value=b.kind;draw();if(b.kind==="bank"){$("wCountry").value=b.country;$("wBank").value=b.bank;$("wAcct").value=b.detail;$("wHolder").value=b.name}else if(b.kind==="wallet")$("wTo").value=b.detail;else{$("wAsset").value=b.asset;$("wTo").value=b.detail}})}
+ $("wGo").onclick=async()=>{const a=Math.round(parseFloat($("wAmt").value)*100)/100,v=m(),w=W();if(!(a>0)){toast("Enter an amount greater than zero.");return}
+  let label,amt=0,to=null,err=null;
+  if(kind==="deposit"){amt=a;if(v==="card"){const n=$("wNum").value.replace(/\D/g,"");if(!V.luhn(n)||V.junk(n))err="That card number isn't valid. Check the digits.";else if(!V.exp($("wExp").value))err="Enter a valid expiry that hasn't passed (MM/YY).";else if(!/^\d{3,4}$/.test($("wCvc").value.trim()))err="Enter the 3 or 4 digit security code.";else if($("wName").value.trim().length<2)err="Enter the name on the card.";label="Card ••"+n.slice(-4)}
+   else if(v==="bank"){const b=readBank();if(typeof b==="string")err=b;else label="Bank deposit from "+b.bank}else{amt=0;label=$("wAsset").value+" deposit requested"}}
+  else if(a>w.bal)err="Not enough balance.";
+  else if(kind==="internet"){const n=($("iN").value||"").trim(),p=$("iP").value.trim(),t=$("iT").value;if(!isCountry($("iCountry").value))err="Choose the country from the list.";else if(p.length<2)err="Enter the provider.";else if(t==="Mobile data bundle"?!V.phone(n):!/^[A-Za-z0-9\-]{5,20}$/.test(n))err=t==="Mobile data bundle"?"Enter a valid phone number for the data bundle.":"Enter your account number with the provider.";amt=-a;label="Internet · "+p+" ("+t+") "+n.slice(-4)}
+  else{amt=-a;if(v==="wallet"){const d=$("wTo").value.trim();if(!(EMAIL_RE.test(d)||V.phone(d)||/^[A-Za-z0-9\-]{6,32}$/.test(d)))err="Enter a valid email, phone number or wallet ID.";else{to={kind:"wallet",name:d,detail:d};label="Sent to "+d}}
+   else if(v==="bank"){const b=readBank();if(typeof b==="string")err=b;else{to=b;label=(kind==="withdraw"?"Withdrawal to ":"Sent to ")+b.name+" · "+b.bank}}
+   else{const d=$("wTo").value.trim(),as=$("wAsset").value;if(!(as==="BTC"?/^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,62}$/.test(d):/^0x[a-fA-F0-9]{40}$/.test(d)))err="That "+as+" address isn't valid. Check it carefully, since crypto sent to a wrong address is lost.";else{to={kind:"crypto",name:as,detail:d,asset:as};label="Withdrawal "+as+" ••"+d.slice(-4)}}}
+  if(err){toast(err);return}
+  const r=await payAdapter(kind,{amt,label,to});if(!r.ok){toast(r.error||"Payment failed.");return}if(r.demo)label+=" (demo)";
+  w.bal=Math.round((w.bal+amt)*100)/100;w.tx.unshift({label,amt,cur:w.cur,date:new Date().toLocaleString(),to});
+  if(to&&$("wSave").checked&&!w.bens.some(b=>b.detail===to.detail&&b.kind===to.kind))w.bens.unshift(to);
+  saveW(w);pushNotif(label);renderWallet();toast("Done.")}}
+
+/* glass department icons */
+const ic=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+const GLASS={visa:ic('<rect x="5" y="3" width="14" height="18" rx="2.5"/><circle cx="12" cy="10" r="3"/><path d="M9 16.5h6"/>'),translator:ic('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>'),navigation:ic('<path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>'),shopping:ic('<path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>'),living:ic('<path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-5h4v5"/>'),local:ic('<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5 5-2z"/>'),assistant:ic('<path d="M12 3l2 5.5L19.5 10 14 12l-2 5.5L10 12 4.5 10 10 8.5 12 3z"/><path d="M18 16l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2z"/>')};
+departments.forEach(d=>{d.icon=GLASS[d.id]});
+const _od=openDepartment;openDepartment=function(id){_od(id);const d=departments.find(x=>x.id===id);if(d)$("departmentTitle").innerHTML='<span class="gl">'+GLASS[id]+"</span> "+escapeHtml(d.name)};
+
+(function init(){
+ const t=CLOUD?"Your profile and journey are saved to your VisaBridge account.":"Your account and journey details are saved on this device.";
+ $("authNote").textContent=t;$("storeNote").textContent=t;$("journeyIntro").textContent="Keep your basic travel plans together. "+(CLOUD?"Your journey is saved to your account.":"Your information is saved on this device.");
+ if(CLOUD){let raw=null;try{raw=JSON.parse(localStorage.getItem("vb_sb"))}catch(e){}
+  if(raw&&raw.refresh_token){sess=raw;(async()=>{try{await ensureSess();await loadCloudProfile();login(sess.user.email)}catch(e){sess=null;authView("welcome")}})()}else authView("welcome");return}
+ let s=null;try{s=localStorage.getItem("vb_session")}catch(e){}if(s&&users()[s])login(s);else authView("welcome")})();
+(function post(){const h=location.hash;if(CLOUD&&/type=recovery/.test(h)){const p=new URLSearchParams(h.slice(1));sess={access_token:p.get("access_token"),refresh_token:p.get("refresh_token"),expires_at:Math.floor(Date.now()/1000)+3600};$("auth").hidden=false;$("appRoot").hidden=true;authView("reset")}
+ else if(cur){bump()}})();
+</script>
+</body>
+</html>
